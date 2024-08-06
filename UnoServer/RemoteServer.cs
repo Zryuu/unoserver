@@ -82,10 +82,8 @@ public class RemoteServer
 
     private void monitorClients()
     {
-        Console.WriteLine("It entered monitorClients");
         while (_isRunning)
         {
-            Console.WriteLine("While");
             if (_clients.Count < 1)
             {
                 continue;
