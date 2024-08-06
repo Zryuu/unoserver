@@ -6,14 +6,14 @@ namespace UnoServer;
 public class Commands(RemoteServer Server)
 {
 
-    public string Ping(TcpClient client)
+    public string Ping(TcpClient client, string command)
     {
         Console.WriteLine($"Ping received from {Server.GetClientId(client)}");
 
         return $"Received your ping, client {Server.GetClientId(client)}";
     }
 
-    public string RemoveClient(TcpClient client)
+    public string RemoveClient(TcpClient client, string command)
     {
         client.Close();
         Server.RemoveClient(client);
@@ -23,7 +23,7 @@ public class Commands(RemoteServer Server)
     }
     
 
-    public string Time(TcpClient client)
+    public string Time(TcpClient client, string command)
     {
         
         return DateTime.Now.ToString();

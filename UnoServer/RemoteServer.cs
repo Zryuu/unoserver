@@ -138,22 +138,29 @@ public class RemoteServer
         _clients.Remove(client);
     }
     
-    private string ExecuteCommand(string command, TcpClient client)
+    private string ExecuteCommand(string message, TcpClient client)
     {
-        var part = (int)command[0];
+        if (string.IsNullOrEmpty(message) || message.Length < 2)
+        {
+            return "Invalid command format.";
+        }
         
-        var route = (CommandRoute)part;
+        var commandByte = (int)message[0];
+        var commandArgument = message[1..];
+        
+        
+        var route = (CommandRoute)(commandByte - '0');
         
         switch (route)
         {
             case CommandRoute.Ping:
-                return commands.Ping(client);
+                return commands.Ping(client, commandArgument);
             case CommandRoute.LogIn:
                 return "added";
             case CommandRoute.LogOut:
-                return commands.RemoveClient(client);
+                return commands.RemoveClient(client, commandArgument);
             case CommandRoute.Time:
-                return commands.Time(client);
+                return commands.Time(client, commandArgument);
             default:
                 return "Unknown command";
         }
