@@ -68,10 +68,10 @@ public class RemoteServer
 
     private void monitorClients()
     {
+        Console.WriteLine("Test");
+        
         while (_isRunning)
         {
-            
-        
             Thread.Sleep(30000);
             DateTime now = DateTime.Now;
 
