@@ -8,8 +8,9 @@ namespace UnoServer;
 enum CommandRoute
 {
     Ping = 0,
-    LogOut = 1,
-    Time = 2
+    LogIn = 1,
+    LogOut = 2,
+    Time = 3
 }
 
 public class RemoteServer
@@ -28,8 +29,10 @@ public class RemoteServer
         commands = new Commands(this);
         Console.WriteLine($"Server is running on port: {port}");
         
-        Thread monitorThread = new Thread(monitorClients);
-        monitorThread.IsBackground = true;
+        Thread monitorThread = new Thread(monitorClients)
+        {
+            IsBackground = true
+        };
         monitorThread.Start();
         
         LoopClients();
@@ -40,7 +43,10 @@ public class RemoteServer
         while (_isRunning)
         {
             TcpClient newClient = _server.AcceptTcpClient();
-            var clientThread = new Thread(HandleClient!);
+            var clientThread = new Thread(HandleClient!)
+            {
+                IsBackground = true
+            };
             clientThread.Start(newClient);
         }
     }
@@ -67,7 +73,7 @@ public class RemoteServer
             string data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
             Console.WriteLine($"Received: {data} from {clientId}");
             _lastActiveTime[client] = DateTime.Now;
-            string response = ExecuteCommand(0, client);
+            string response = ExecuteCommand(data, client);
             byte[] responseBytes = Encoding.ASCII.GetBytes(response);
             stream.Write(responseBytes, 0, responseBytes.Length);
             
@@ -134,14 +140,18 @@ public class RemoteServer
         _clients.Remove(client);
     }
     
-    private string ExecuteCommand(int command, TcpClient client)
+    private string ExecuteCommand(string command, TcpClient client)
     {
-        var route = (CommandRoute)command;
+        var part = (int)command[0];
+        
+        var route = (CommandRoute)part;
         
         switch (route)
         {
             case CommandRoute.Ping:
                 return commands.Ping(client);
+            case CommandRoute.LogIn:
+                return "added";
             case CommandRoute.LogOut:
                 return commands.RemoveClient(client);
             case CommandRoute.Time:
