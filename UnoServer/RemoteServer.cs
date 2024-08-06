@@ -12,6 +12,7 @@ public class RemoteServer
     private bool _isRunning;
     private Commands commands;
     private Dictionary<TcpClient, string> _clients = new Dictionary<TcpClient, string>();
+    private Dictionary<TcpClient, DateTime> _lastActiveTime = new Dictionary<TcpClient, DateTime>();
 
     public RemoteServer(int port)
     {
@@ -21,6 +22,9 @@ public class RemoteServer
         commands = new Commands(this);
         Console.WriteLine($"Server is running on port: {port}");
         LoopClients();
+
+        Thread monitorThread = new Thread(monitorClients);
+        monitorThread.Start();
     }
 
     private void LoopClients()
@@ -28,8 +32,9 @@ public class RemoteServer
         while (_isRunning)
         {
             TcpClient newClient = _server.AcceptTcpClient();
-            var clientThread = new System.Threading.Thread(HandleClient!);
-                clientThread.Start(newClient);
+            var clientThread = new Thread(HandleClient!);
+            clientThread.Start(newClient);
+            
         }
     }
 
@@ -45,6 +50,7 @@ public class RemoteServer
 
         //  Adds client to Server
         _clients[client] = clientId;
+        _lastActiveTime[client] = DateTime.Now;
         Console.WriteLine($"Client connected with ID: {_clients[client]}");
         
         
@@ -52,13 +58,40 @@ public class RemoteServer
         {
             string data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
             Console.WriteLine($"Received: {data} from {clientId}");
+            _lastActiveTime[client] = DateTime.Now;
             string response = ExecuteCommand(data, client);
             byte[] responseBytes = Encoding.ASCII.GetBytes(response);
             stream.Write(responseBytes, 0, responseBytes.Length);
             
         }
     }
-    
+
+    private void monitorClients()
+    {
+        while (_isRunning)
+        {
+            
+        
+            Thread.Sleep(30000);
+            DateTime now = DateTime.Now;
+
+            List<TcpClient> inactiveClients = new List<TcpClient>();
+            
+            foreach (var client in _lastActiveTime)
+            {
+                if ((now - client.Value).TotalSeconds > 30)
+                {
+                    inactiveClients.Add(client.Key);
+                }
+            }
+
+            foreach (var client in inactiveClients)
+            {
+                Console.WriteLine($"removing inactive client with ID: {_clients[client]}");
+                RemoveClient(client);
+            }
+        }
+    }
     
     public string GetClientId(TcpClient client)
     {
@@ -85,6 +118,8 @@ public class RemoteServer
                 return commands.Ping(client);
             case "logout":
                 return commands.RemoveClient(client);
+            case "time":
+                return commands.Time(client);
             default:
                 return "Unknown command";
         }

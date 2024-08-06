@@ -20,7 +20,7 @@ public class Commands(RemoteServer Server)
         Server.RemoveClient(client);
         Console.WriteLine($"Removed: {Server.GetClientId(client)} from client list. Client Disconnected...");
 
-        return $"Server: Goodbye...";
+        return "Server: Goodbye...";
     }
 
     private static void WriteResponse(TcpClient client,string message)
@@ -36,6 +36,14 @@ public class Commands(RemoteServer Server)
         var messageBytes = Encoding.ASCII.GetBytes(message);
 
         stream.Write(messageBytes, 0, messageBytes.Length);
+    }
+
+    public string Time(TcpClient client)
+    {
+        
+        WriteResponse(client, $"Time: {DateTime.Now.ToString()}");
+        
+        return DateTime.Now.ToString();
     }
     
 }
