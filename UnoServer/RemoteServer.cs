@@ -5,6 +5,12 @@ using System.Text;
 
 namespace UnoServer;
 
+enum CommandRoute
+{
+    Ping = 0,
+    LogOut = 1,
+    Time = 2
+}
 
 public class RemoteServer
 {
@@ -21,9 +27,11 @@ public class RemoteServer
         _isRunning = true;
         commands = new Commands(this);
         Console.WriteLine($"Server is running on port: {port}");
+        
+        Thread monitorThread = new Thread(monitorClients);
+        monitorThread.Start();
+        
         LoopClients();
-
-
     }
 
     private void LoopClients()
@@ -33,9 +41,6 @@ public class RemoteServer
             TcpClient newClient = _server.AcceptTcpClient();
             var clientThread = new Thread(HandleClient!);
             clientThread.Start(newClient);
-            
-            Thread monitorThread = new Thread(monitorClients);
-            monitorThread.Start();
         }
     }
 
@@ -61,7 +66,7 @@ public class RemoteServer
             string data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
             Console.WriteLine($"Received: {data} from {clientId}");
             _lastActiveTime[client] = DateTime.Now;
-            string response = ExecuteCommand(data, client);
+            string response = ExecuteCommand(0, client);
             byte[] responseBytes = Encoding.ASCII.GetBytes(response);
             stream.Write(responseBytes, 0, responseBytes.Length);
             
@@ -73,6 +78,11 @@ public class RemoteServer
         
         while (_isRunning)
         {
+            if (_lastActiveTime.Count < 1)
+            {
+                return;
+            }
+            
             Thread.Sleep(30000);
             DateTime now = DateTime.Now;
 
@@ -121,15 +131,17 @@ public class RemoteServer
         _clients.Remove(client);
     }
     
-    private string ExecuteCommand(string command, TcpClient client)
+    private string ExecuteCommand(int command, TcpClient client)
     {
-        switch (command.Trim().ToLower())
+        var route = (CommandRoute)command;
+        
+        switch (route)
         {
-            case "ping":
+            case CommandRoute.Ping:
                 return commands.Ping(client);
-            case "logout":
+            case CommandRoute.LogOut:
                 return commands.RemoveClient(client);
-            case "time":
+            case CommandRoute.Time:
                 return commands.Time(client);
             default:
                 return "Unknown command";
