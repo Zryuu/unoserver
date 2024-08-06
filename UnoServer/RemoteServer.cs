@@ -67,7 +67,7 @@ public class RemoteServer
         byte[] responseBytes = Encoding.ASCII.GetBytes(response);
         stream.Write(responseBytes, 0, responseBytes.Length);
 
-        if (response.StartsWith("Client added:"))
+        if (response.StartsWith("UNO: Successfully"))
         {
             _lastActiveTime[client] = DateTime.Now;
             Console.WriteLine($"Client connected with ID: {_clients[client]}");
@@ -120,8 +120,8 @@ public class RemoteServer
             }
         }
     }
-
-    private string AddNewClients(TcpClient client, string clientId)
+    
+    public string AddNewClients(TcpClient client, string clientId)
     {
         if (_clients.ContainsKey(client))
         {
