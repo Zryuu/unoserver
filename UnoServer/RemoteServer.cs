@@ -55,9 +55,11 @@ public class RemoteServer
             string response = ExecuteCommand(data, client);
             byte[] responseBytes = Encoding.ASCII.GetBytes(response);
             stream.Write(responseBytes, 0, responseBytes.Length);
+            
         }
     }
-
+    
+    
     public string GetClientId(TcpClient client)
     {
         var id = _clients[client];
