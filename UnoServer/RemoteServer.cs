@@ -29,6 +29,7 @@ public class RemoteServer
         Console.WriteLine($"Server is running on port: {port}");
         
         Thread monitorThread = new Thread(monitorClients);
+        monitorThread.IsBackground = true;
         monitorThread.Start();
         
         LoopClients();
@@ -105,9 +106,9 @@ public class RemoteServer
         }
     }
 
-    public void AddNewClients(TcpClient client, string clientId)
+    private void AddNewClients(TcpClient client, string clientId)
     {
-        if (_clients.TryGetValue(client, out clientId!))
+        if (_clients[client] != null)
         {
             Console.WriteLine($"{clientId} is already a client...");
         }
