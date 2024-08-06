@@ -1,0 +1,14 @@
+C:\Users\Liam\Documents\Dalamud\UnoServer\UnoServer\UnoServer\obj\Debug\net8.0\UnoServer.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Liam\Documents\Dalamud\UnoServer\UnoServer\UnoServer\obj\Debug\net8.0\UnoServer.AssemblyInfoInputs.cache
+C:\Users\Liam\Documents\Dalamud\UnoServer\UnoServer\UnoServer\obj\Debug\net8.0\UnoServer.AssemblyInfo.cs
+C:\Users\Liam\Documents\Dalamud\UnoServer\UnoServer\UnoServer\obj\Debug\net8.0\UnoServer.csproj.CoreCompileInputs.cache
+C:\Users\Liam\Documents\Dalamud\UnoServer\UnoServer\UnoServer\bin\Debug\net8.0\UnoServer.exe
+C:\Users\Liam\Documents\Dalamud\UnoServer\UnoServer\UnoServer\bin\Debug\net8.0\UnoServer.deps.json
+C:\Users\Liam\Documents\Dalamud\UnoServer\UnoServer\UnoServer\bin\Debug\net8.0\UnoServer.runtimeconfig.json
+C:\Users\Liam\Documents\Dalamud\UnoServer\UnoServer\UnoServer\bin\Debug\net8.0\UnoServer.dll
+C:\Users\Liam\Documents\Dalamud\UnoServer\UnoServer\UnoServer\bin\Debug\net8.0\UnoServer.pdb
+C:\Users\Liam\Documents\Dalamud\UnoServer\UnoServer\UnoServer\obj\Debug\net8.0\UnoServer.dll
+C:\Users\Liam\Documents\Dalamud\UnoServer\UnoServer\UnoServer\obj\Debug\net8.0\refint\UnoServer.dll
+C:\Users\Liam\Documents\Dalamud\UnoServer\UnoServer\UnoServer\obj\Debug\net8.0\UnoServer.pdb
+C:\Users\Liam\Documents\Dalamud\UnoServer\UnoServer\UnoServer\obj\Debug\net8.0\UnoServer.genruntimeconfig.cache
+C:\Users\Liam\Documents\Dalamud\UnoServer\UnoServer\UnoServer\obj\Debug\net8.0\ref\UnoServer.dll
