@@ -59,25 +59,36 @@ public class RemoteServer
         int bytesRead;
 
         bytesRead = stream.Read(buffer, 0, buffer.Length);
-        string clientId = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+        string data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+        Console.WriteLine($"Received: {data} for login attempt");
 
         //  Adds client to Server
-        AddNewClients(client, clientId);
-        
-        _lastActiveTime[client] = DateTime.Now;
-        Console.WriteLine($"Client connected with ID: {_clients[client]}");
-        
-        
-        while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) != 0)
+        string response = ExecuteCommand(data, client);
+        byte[] responseBytes = Encoding.ASCII.GetBytes(response);
+        stream.Write(responseBytes, 0, responseBytes.Length);
+
+        if (response.StartsWith("Client added:"))
         {
-            string data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-            Console.WriteLine($"Received: {data} from {clientId}");
             _lastActiveTime[client] = DateTime.Now;
-            string response = ExecuteCommand(data, client);
-            byte[] responseBytes = Encoding.ASCII.GetBytes(response);
-            stream.Write(responseBytes, 0, responseBytes.Length);
+            Console.WriteLine($"Client connected with ID: {_clients[client]}");
             
+            while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) != 0)
+            {
+                data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                Console.WriteLine($"Received: {data} from {_clients[client]}");
+                _lastActiveTime[client] = DateTime.Now;
+                string commandResponse = ExecuteCommand(data, client);
+                byte[] commandResponseBytes = Encoding.ASCII.GetBytes(commandResponse);
+                stream.Write(commandResponseBytes, 0, commandResponseBytes.Length);
+            
+            }
         }
+        else
+        {
+            Console.WriteLine("Invalid login attempt. Closing connection.");
+            client.Close();
+        }
+        
     }
 
     private void monitorClients()
@@ -110,7 +121,7 @@ public class RemoteServer
         }
     }
 
-    private void AddNewClients(TcpClient client, string clientId)
+    private string AddNewClients(TcpClient client, string clientId)
     {
         if (_clients.ContainsKey(client))
         {
@@ -118,7 +129,8 @@ public class RemoteServer
         }
         
         _clients[client] = clientId;
-        Console.WriteLine($"Added ne client: {clientId}");
+        Console.WriteLine($"Added new client: {clientId}");
+        return $"UNO: Successfully connected to Server. Welcome {clientId}!";
     }
     
     public string GetClientId(TcpClient client)
@@ -156,7 +168,7 @@ public class RemoteServer
             case CommandRoute.Ping:
                 return commands.Ping(client, commandArgument);
             case CommandRoute.LogIn:
-                return "added";
+                return AddNewClients(client, commandArgument);
             case CommandRoute.LogOut:
                 return commands.RemoveClient(client, commandArgument);
             case CommandRoute.Time:
