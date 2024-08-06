@@ -23,8 +23,7 @@ public class RemoteServer
         Console.WriteLine($"Server is running on port: {port}");
         LoopClients();
 
-        Thread monitorThread = new Thread(monitorClients);
-        monitorThread.Start();
+
     }
 
     private void LoopClients()
@@ -35,6 +34,8 @@ public class RemoteServer
             var clientThread = new Thread(HandleClient!);
             clientThread.Start(newClient);
             
+            Thread monitorThread = new Thread(monitorClients);
+            monitorThread.Start();
         }
     }
 
@@ -49,7 +50,8 @@ public class RemoteServer
         string clientId = Encoding.ASCII.GetString(buffer, 0, bytesRead);
 
         //  Adds client to Server
-        _clients[client] = clientId;
+        AddNewClients(client, clientId);
+        
         _lastActiveTime[client] = DateTime.Now;
         Console.WriteLine($"Client connected with ID: {_clients[client]}");
         
@@ -68,7 +70,6 @@ public class RemoteServer
 
     private void monitorClients()
     {
-        Console.WriteLine("Test");
         
         while (_isRunning)
         {
@@ -91,6 +92,16 @@ public class RemoteServer
                 RemoveClient(client);
             }
         }
+    }
+
+    public void AddNewClients(TcpClient client, string clientId)
+    {
+        if (_clients.TryGetValue(client, out clientId!))
+        {
+            Console.WriteLine($"{clientId} is already a client...");
+        }
+        
+        _clients[client] = clientId;
     }
     
     public string GetClientId(TcpClient client)
