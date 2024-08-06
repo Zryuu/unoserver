@@ -80,9 +80,9 @@ public class RemoteServer
         while (_isRunning)
         {
             Console.WriteLine("While");
-            if (_lastActiveTime.Count < 1)
+            if (_clients.Count < 1)
             {
-                return;
+                continue;
             }
             
             Thread.Sleep(30000);
@@ -108,12 +108,13 @@ public class RemoteServer
 
     private void AddNewClients(TcpClient client, string clientId)
     {
-        if (_clients[client] != null)
+        if (_clients.ContainsKey(client))
         {
             Console.WriteLine($"{clientId} is already a client...");
         }
         
         _clients[client] = clientId;
+        Console.WriteLine($"Added ne client: {clientId}");
     }
     
     public string GetClientId(TcpClient client)
