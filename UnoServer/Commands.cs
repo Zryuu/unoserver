@@ -9,7 +9,6 @@ public class Commands(RemoteServer Server)
     public string Ping(TcpClient client)
     {
         Console.WriteLine($"Ping received from {Server.GetClientId(client)}");
-        WriteResponse(client, $"Received your ping, client {Server.GetClientId(client)}");
 
         return $"Received your ping, client {Server.GetClientId(client)}";
     }
@@ -22,26 +21,10 @@ public class Commands(RemoteServer Server)
 
         return "Server: Goodbye...";
     }
-
-    private static void WriteResponse(TcpClient client,string message)
-    {
-        var stream = client.GetStream();
-
-        if (stream == null)
-        {
-            Console.WriteLine("Commands::writeResponse:: client.GetStream() returned false");
-            return;
-        }
-        
-        var messageBytes = Encoding.ASCII.GetBytes(message);
-
-        stream.Write(messageBytes, 0, messageBytes.Length);
-    }
+    
 
     public string Time(TcpClient client)
     {
-        
-        WriteResponse(client, $"Time: {DateTime.Now.ToString()}");
         
         return DateTime.Now.ToString();
     }
