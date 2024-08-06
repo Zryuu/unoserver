@@ -128,7 +128,7 @@ public class RemoteServer
             Console.WriteLine($"{clientId} is already a client...");
         }
         
-        _clients[client] = clientId;
+        _clients.Add(client, clientId);
         Console.WriteLine($"Added new client: {clientId}");
         return $"UNO: Successfully connected to Server. Welcome {clientId}!";
     }
