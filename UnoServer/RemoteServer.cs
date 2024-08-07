@@ -175,11 +175,21 @@ public class RemoteServer
     //  Checks if client is in clients, removes client if true
     public void RemoveClient(TcpClient client)
     {
-        if (_clients[client].Client == null!)
+        var clientFound = false;
+        foreach (var c in _clients)
+        {
+            if (c.Key.Client.Equals(client))
+            {
+                _clients.Remove(c.Key);
+                clientFound = true;
+                break;
+            }
+        }
+        
+        if (!clientFound)
         {
             Console.WriteLine($"RemoteServer::RemoveClient: No Client could be found...Requested client: {client}");
         }
-        _clients.Remove(client);
     }
     
     //  Executes Commands on the server.
