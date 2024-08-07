@@ -116,12 +116,13 @@ public class RemoteServer
             foreach (var client in inactiveClients)
             {
                 Console.WriteLine($"removing inactive client with ID: {_clients[client]}");
+                _clients.Remove(client);
                 RemoveClient(client);
             }
         }
     }
-    
-    public string AddNewClients(TcpClient client, string clientId)
+
+    private string AddNewClients(TcpClient client, string clientId)
     {
         if (_clients.ContainsKey(client))
         {
