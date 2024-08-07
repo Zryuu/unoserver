@@ -5,31 +5,42 @@ using System.Text;
 
 namespace UnoServer;
 
-enum CommandRoute
+internal enum CommandRoute
 {
     Ping = 0,
     LogIn = 1,
     LogOut = 2,
-    Time = 3
+    StartGame = 3,
+    EndGame = 4,
+    JoinRoom = 5,
+    LeaveRoom = 6
+}
+
+public struct ClientInfo
+{
+    public TcpClient Client;
+    public string XivName;
+    public bool BInGame;
+    public int? GameSeed;
 }
 
 public class RemoteServer
 {
-    private TcpListener _server;
-    private bool _isRunning;
-    private Commands commands;
-    private Dictionary<TcpClient, string> _clients = new Dictionary<TcpClient, string>();
+    private readonly TcpListener _server;
+    private readonly bool _isRunning;
+    private readonly Commands _commands;
+    private Dictionary<TcpClient, ClientInfo> _clients = new Dictionary<TcpClient, ClientInfo>();
     private Dictionary<TcpClient, DateTime> _lastActiveTime = new Dictionary<TcpClient, DateTime>();
 
-    public RemoteServer(int port)
+    private RemoteServer(int port)
     {
         _server = new TcpListener(IPAddress.Any, port);
         _server.Start();
         _isRunning = true;
-        commands = new Commands(this);
+        _commands = new Commands(this);
         Console.WriteLine($"Server is running on port: {port}");
         
-        Thread monitorThread = new Thread(monitorClients)
+        var monitorThread = new Thread(MonitorClients)
         {
             IsBackground = true
         };
@@ -42,7 +53,7 @@ public class RemoteServer
     {
         while (_isRunning)
         {
-            TcpClient newClient = _server.AcceptTcpClient();
+            var newClient = _server.AcceptTcpClient();
             var clientThread = new Thread(HandleClient!)
             {
                 IsBackground = true
@@ -91,7 +102,8 @@ public class RemoteServer
         
     }
 
-    private void monitorClients()
+    //  Checks if any client in clients hasn't sent a ping in > 5mins. If so, removes them from server.
+    private void MonitorClients()
     {
         while (_isRunning)
         {
@@ -100,10 +112,11 @@ public class RemoteServer
                 continue;
             }
             
-            Thread.Sleep(30000);
-            DateTime now = DateTime.Now;
+            //  Sleep for 5mins.
+            Thread.Sleep(3000000);
+            var now = DateTime.Now;
 
-            List<TcpClient> inactiveClients = new List<TcpClient>();
+            var inactiveClients = new List<TcpClient>();
             
             foreach (var client in _lastActiveTime)
             {
@@ -122,35 +135,54 @@ public class RemoteServer
         }
     }
 
+    //  Checks if client is in clients. If not, add new client.
     private string AddNewClients(TcpClient client, string clientId)
     {
         if (_clients.ContainsKey(client))
         {
             Console.WriteLine($"{clientId} is already a client...");
         }
-        
-        _clients.Add(client, clientId);
+
+        var newInfo = new ClientInfo
+        {
+            Client = client,
+            XivName = clientId,
+            BInGame = false,
+            GameSeed = null
+        };
+
+        _clients.Add(client, newInfo);
         Console.WriteLine($"Added new client: {clientId}");
         return $"UNO: Successfully connected to Server. Welcome {clientId}!";
     }
     
+    //  Returns ClientId (aka XivName)
     public string GetClientId(TcpClient client)
     {
-        var id = _clients[client];
-
-        return id;
+        if (!_clients.ContainsKey(client))
+        {
+            Console.WriteLine($"RemoteServer::GetClientId: failed, no client exists in clients. Requested client: {client}");
+        }
+        return _clients[client].XivName;
     }
 
+    //  Returns Clients
+    public Dictionary<TcpClient, ClientInfo> GetClients()
+    {
+        return _clients;
+    }
+
+    //  Checks if client is in clients, removes client if true
     public void RemoveClient(TcpClient client)
     {
-        if (_clients[client] == null)
+        if (_clients[client].Client == null!)
         {
-            Console.WriteLine("RemoteServer::RemoveClient:: No Client could be found...");
+            Console.WriteLine($"RemoteServer::RemoveClient: No Client could be found...Requested client: {client}");
         }
-
         _clients.Remove(client);
     }
     
+    //  Executes Commands on the server.
     private string ExecuteCommand(string message, TcpClient client)
     {
         if (string.IsNullOrEmpty(message) || message.Length < 2)
@@ -166,16 +198,30 @@ public class RemoteServer
         
         switch (route)
         {
+            //  Ping = 0
             case CommandRoute.Ping:
-                return commands.Ping(client, commandArgument);
+                return _commands.Ping(client, commandArgument);
+            //  LogIn = 1,
             case CommandRoute.LogIn:
                 return AddNewClients(client, commandArgument);
+            //  LogOut = 2,
             case CommandRoute.LogOut:
-                return commands.RemoveClient(client, commandArgument);
-            case CommandRoute.Time:
-                return commands.Time(client, commandArgument);
+                return _commands.RemoveClient(client, commandArgument);
+            //  StartGame = 3,
+            case CommandRoute.StartGame:
+                return _commands.StartGame(client, commandArgument);
+            //  EndGame = 4,
+            case CommandRoute.EndGame:
+                return "EndGame";
+            //  JoinRoom = 5,
+            case CommandRoute.JoinRoom:
+                return "JoinRoom";
+            //  LeaveRoom = 6
+            case CommandRoute.LeaveRoom:
+                return "LeaveRoom";
             default:
                 return "Unknown command";
+                
         }
     }
     
