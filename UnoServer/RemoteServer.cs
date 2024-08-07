@@ -113,7 +113,7 @@ public class RemoteServer
             }
             
             //  Sleep for 5mins.
-            Thread.Sleep(3000000);
+            Thread.Sleep(30000);
             var now = DateTime.Now;
 
             var inactiveClients = new List<TcpClient>();
@@ -128,7 +128,7 @@ public class RemoteServer
 
             foreach (var client in inactiveClients)
             {
-                Console.WriteLine($"removing inactive client with ID: {_clients[client]}");
+                Console.WriteLine($"removing inactive client with ID: {_clients[client].XivName}");
                 _clients.Remove(client);
                 RemoveClient(client);
             }
