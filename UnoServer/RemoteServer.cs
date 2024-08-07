@@ -81,7 +81,7 @@ public class RemoteServer
         if (response.StartsWith("UNO: Successfully"))
         {
             _lastActiveTime[client] = DateTime.Now;
-            Console.WriteLine($"Client connected with ID: {_clients[client]}");
+            Console.WriteLine($"Client connected with ID: {_clients[client].XivName}");
             
             while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) != 0)
             {
