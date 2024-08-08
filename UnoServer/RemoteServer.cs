@@ -27,6 +27,8 @@ public class RemoteServer
     private Dictionary<Client, DateTime> _lastActiveTime = new Dictionary<Client, DateTime>();
     private Dictionary<long, Room> _rooms = new Dictionary<long, Room>();
 
+    public NetworkStream Stream;
+
     private RemoteServer(int port)
     {
         _server = new TcpListener(IPAddress.Any, port);
@@ -60,18 +62,17 @@ public class RemoteServer
     private void HandleClient(object obj)
     {
         TcpClient tcpClient = (TcpClient)obj;
-        NetworkStream stream = tcpClient.GetStream();
+        Stream = tcpClient.GetStream();
         byte[] buffer = new byte[1024];
         int bytesRead;
 
-        bytesRead = stream.Read(buffer, 0, buffer.Length);
+        bytesRead = Stream.Read(buffer, 0, buffer.Length);
         string data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
         Console.WriteLine($"Received: {data} for login attempt");
 
         //  Adds client to Server
         string response = ExecuteCommand(data, tcpClient);
-        byte[] responseBytes = Encoding.ASCII.GetBytes(response);
-        stream.Write(responseBytes, 0, responseBytes.Length);
+        SendMessageToClient(response);
 
         if (response.StartsWith("UNO: Successfully"))
         {
@@ -79,14 +80,13 @@ public class RemoteServer
             client.SetLastActive(DateTime.Now);
             Console.WriteLine($"Client connected with ID: {_clients[tcpClient].GetXivName()}");
             
-            while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) != 0)
+            while ((bytesRead = Stream.Read(buffer, 0, buffer.Length)) != 0)
             {
                 data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
                 Console.WriteLine($"Received: {data} from {_clients[tcpClient]}");
                 _lastActiveTime[_clients[tcpClient]] = DateTime.Now;
                 string commandResponse = ExecuteCommand(data, tcpClient);
-                byte[] commandResponseBytes = Encoding.ASCII.GetBytes(commandResponse);
-                stream.Write(commandResponseBytes, 0, commandResponseBytes.Length);
+                SendMessageToClient(commandResponse);
             
             }
         }
@@ -188,7 +188,12 @@ public class RemoteServer
         }
     }
 
-
+    public void SendMessageToClient(string message)
+    {
+        byte[] commandResponseBytes = Encoding.ASCII.GetBytes(message);
+        Stream.Write(commandResponseBytes, 0, commandResponseBytes.Length);
+    }
+    
     public Dictionary<long, Room> GetRooms()
     {
         return _rooms;

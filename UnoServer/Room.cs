@@ -6,12 +6,16 @@ public class Room
     private int MaxPlayers { get; set; }
     private Client Host { get; set; }
     public List<Client> CurrentPlayers { get; set; }
+    
+    public RemoteServer Server;
 
-    public Room(Client client, int maxPlayers)
+    public Room(Client client, RemoteServer server, int maxPlayers)
     {
+        this.Server = server;
+        
         CreateRoomId();
-        SetHost(client);
         AddClientToRoom(client, RoomId);
+        SetHost(client);
         
         Console.WriteLine($"Room{RoomId} created by {client.GetXivName()}");
         
@@ -22,9 +26,9 @@ public class Room
         return RoomId;
     }
 
-    public void SetRoomId(long Id)
+    public void SetRoomId(long id)
     {
-        RoomId = Id;
+        RoomId = id;
     }
     
     public void CreateRoomId()
@@ -53,6 +57,14 @@ public class Room
     
     public string UpdateCurrentPlayersInRoom()
     {
+        foreach (var player in CurrentPlayers)
+        {
+            //  Loop through all players, get name.
+            //  User Server to send message with CurrentPlayers and all names but theirs.
+            
+            Server.
+        }
+        
         //  Using CurrentPlayers, send message telling everyone Whose in the room.
         //  msg format: amount of players, player names[].
 
