@@ -1,5 +1,4 @@
 ﻿using System.Net.Sockets;
-using System.Text;
 
 namespace UnoServer;
 
@@ -7,15 +6,15 @@ namespace UnoServer;
 public class Commands(RemoteServer Server)
 {
 
-    public string Ping(TcpClient client, string command)
+    public string Ping(Client client, string command)
     {
-        if (!Server.GetClients().ContainsKey(client))
+        if (!Server.GetClients().ContainsValue(client))
         {
             Console.WriteLine($"Ping received from non-current client: {client}. command: {command}");
             return 0.ToString();
         }
         
-        Console.WriteLine($"Ping received from {Server.GetClientId(client)}");
+        Console.WriteLine($"Ping received from {client.GetXivName()}");
         return 1.ToString();
     }
 
@@ -29,21 +28,90 @@ public class Commands(RemoteServer Server)
         return "EndGame was entered";
     }
     
-    public string JoinRoom(TcpClient client, string command)
+    public string JoinRoom(Client client, string command)
     {
-        return "Joined Room";
+
+        if (client.GetRoomId() != null)
+        {
+            //  Lease Room
+        }
+
+        if (!long.TryParse(command, out var part))
+        {
+            part = (long)Convert.ToInt64(command);
+        }
+         
+        
+        //  Check if Room exists 
+        
+        client.SetRoomId(part);
+
+        //  Add thing to make check if Client was added to Room.
+        
+        var response = $"{1.ToString()}{part}";
+        
+        return response;
     }
     
-    public string LeaveRoom(TcpClient client, string command)
+    public string CreateRoom(Client client, string command)
     {
-        return "Leave Room";
+        var part = int.Parse(command);
+        
+        Room room = new Room(client,part);
+                
+        //  Check if duplicate ID, reroll if true.
+        while (true)
+        {
+            if (Server.GetRoomFromId(room.GetRoomId()) == null)
+            {
+                room.CreateRoomId();
+                continue;
+            }
+
+            break;
+        }
+
+        //  Logic to parse message to set MaxPlayers.
+        
+        Server.AddRoomToRooms(room);
+        
+        client.SetRoomId(room.GetRoomId());
+        var response = $"{1.ToString()}{room.GetRoomId()}";
+
+        return response;
     }
     
-    public string RemoveClient(TcpClient client, string command)
+    public string LeaveRoom(Client client, string command)
     {
-        client.Close();
-        Server.RemoveClient(client);
-        Console.WriteLine($"Removed: {Server.GetClientId(client)} from client list. Client Disconnected...");
+        var givenId = long.Parse(command);
+
+        if (client.GetCurrentRoom() == null)
+        {
+            return $"{0.ToString()}";
+        }
+        
+        if (client.GetRoomId() != givenId)
+        {
+            if (Server.GetRooms().ContainsKey((long)client.GetRoomId()!) == null)
+            {
+                client.SetCurrentRoom(null!);
+            }
+            
+            Server.GetRoomFromId((long)client.GetRoomId()!)!.RemoveClientFromRoom(client);
+            client.SetCurrentRoom(null!);
+        }
+
+        Server.GetRoomFromId(givenId)!.RemoveClientFromRoom(client);
+        client.SetCurrentRoom(null!);
+
+        return $"{1.ToString()}";
+    }
+    
+    public string RemoveClient(Client client, string command)
+    {
+        client.GetClient().Close();
+        Server.RemoveClient(client.GetClient());
+        Console.WriteLine($"Removed: {client.GetClient()} from client list. Client Disconnected...");
 
         return "Server: Goodbye...";
     }

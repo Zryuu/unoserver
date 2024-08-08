@@ -12,16 +12,9 @@ internal enum CommandRoute
     LogOut = 2,
     StartGame = 3,
     EndGame = 4,
-    JoinRoom = 5,
-    LeaveRoom = 6
-}
-
-public struct ClientInfo
-{
-    public TcpClient Client;
-    public string XivName;
-    public bool BInGame;
-    public int? GameSeed;
+    CreateRoom = 5,
+    JoinRoom = 6,
+    LeaveRoom = 7
 }
 
 public class RemoteServer
@@ -29,8 +22,10 @@ public class RemoteServer
     private readonly TcpListener _server;
     private readonly bool _isRunning;
     private readonly Commands _commands;
-    private Dictionary<TcpClient, ClientInfo> _clients = new Dictionary<TcpClient, ClientInfo>();
-    private Dictionary<TcpClient, DateTime> _lastActiveTime = new Dictionary<TcpClient, DateTime>();
+    private const int AfkTimer = 30;
+    private Dictionary<TcpClient, Client> _clients = new Dictionary<TcpClient, Client>();
+    private Dictionary<Client, DateTime> _lastActiveTime = new Dictionary<Client, DateTime>();
+    private Dictionary<long, Room> _rooms = new Dictionary<long, Room>();
 
     private RemoteServer(int port)
     {
@@ -64,8 +59,8 @@ public class RemoteServer
 
     private void HandleClient(object obj)
     {
-        TcpClient client = (TcpClient)obj;
-        NetworkStream stream = client.GetStream();
+        TcpClient tcpClient = (TcpClient)obj;
+        NetworkStream stream = tcpClient.GetStream();
         byte[] buffer = new byte[1024];
         int bytesRead;
 
@@ -74,21 +69,22 @@ public class RemoteServer
         Console.WriteLine($"Received: {data} for login attempt");
 
         //  Adds client to Server
-        string response = ExecuteCommand(data, client);
+        string response = ExecuteCommand(data, tcpClient);
         byte[] responseBytes = Encoding.ASCII.GetBytes(response);
         stream.Write(responseBytes, 0, responseBytes.Length);
 
         if (response.StartsWith("UNO: Successfully"))
         {
-            _lastActiveTime[client] = DateTime.Now;
-            Console.WriteLine($"Client connected with ID: {_clients[client].XivName}");
+            Client client = _clients[tcpClient];
+            client.SetLastActive(DateTime.Now);
+            Console.WriteLine($"Client connected with ID: {_clients[tcpClient].GetXivName()}");
             
             while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) != 0)
             {
                 data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                Console.WriteLine($"Received: {data} from {_clients[client]}");
-                _lastActiveTime[client] = DateTime.Now;
-                string commandResponse = ExecuteCommand(data, client);
+                Console.WriteLine($"Received: {data} from {_clients[tcpClient]}");
+                _lastActiveTime[_clients[tcpClient]] = DateTime.Now;
+                string commandResponse = ExecuteCommand(data, tcpClient);
                 byte[] commandResponseBytes = Encoding.ASCII.GetBytes(commandResponse);
                 stream.Write(commandResponseBytes, 0, commandResponseBytes.Length);
             
@@ -97,7 +93,7 @@ public class RemoteServer
         else
         {
             Console.WriteLine("Invalid login attempt. Closing connection.");
-            client.Close();
+            tcpClient.Close();
         }
         
     }
@@ -113,14 +109,14 @@ public class RemoteServer
             }
             
             //  Sleep for 5mins.
-            Thread.Sleep(30000);
+            Thread.Sleep(AfkTimer * 1000);
             var now = DateTime.Now;
 
-            var inactiveClients = new List<TcpClient>();
+            var inactiveClients = new List<Client>();
             
             foreach (var client in _lastActiveTime)
             {
-                if ((now - client.Value).TotalSeconds > 30)
+                if ((now - client.Value).TotalSeconds > AfkTimer)
                 {
                     inactiveClients.Add(client.Key);
                 }
@@ -128,9 +124,9 @@ public class RemoteServer
 
             foreach (var client in inactiveClients)
             {
-                Console.WriteLine($"removing inactive client with ID: {_clients[client].XivName}");
-                _clients.Remove(client);
-                RemoveClient(client);
+                Console.WriteLine($"removing inactive client with ID: {_clients[client.GetClient()].GetXivName()}");
+                _clients.Remove(client.GetClient());
+                RemoveClient(client.GetClient());
             }
         }
     }
@@ -143,33 +139,35 @@ public class RemoteServer
             Console.WriteLine($"{clientId} is already a client...");
         }
 
-        var newInfo = new ClientInfo
-        {
-            Client = client,
-            XivName = clientId,
-            BInGame = false,
-            GameSeed = null
-        };
-
-        _clients.Add(client, newInfo);
-        Console.WriteLine($"Added new client: {clientId}");
-        return $"UNO: Successfully connected to Server. Welcome {clientId}!";
+        var newClient = new Client(client, clientId, this);
+            newClient.SetXivName(clientId);
+            newClient.SetBInGame(false);
+            
+        _clients.Add(client, newClient);
+        Console.WriteLine($"Added new client: {newClient.GetXivName()}");
+        return $"UNO: Successfully connected to Server. Welcome {newClient.GetXivName()}!";
     }
-    
-    //  Returns ClientId (aka XivName)
-    public string GetClientId(TcpClient client)
+
+    public void AddRoomToRooms(Room room)
     {
-        if (!_clients.ContainsKey(client))
-        {
-            Console.WriteLine($"RemoteServer::GetClientId: failed, no client exists in clients. Requested client: {client}");
-        }
-        return _clients[client].XivName;
+        _rooms.Add(room.GetRoomId(), room);
     }
 
     //  Returns Clients
-    public Dictionary<TcpClient, ClientInfo> GetClients()
+    public Dictionary<TcpClient, Client> GetClients()
     {
         return _clients;
+    }
+    
+    public Client? GetClient(TcpClient client)
+    {
+        if (!_clients.ContainsKey(client))
+        {
+            Console.WriteLine($"No client exists. Requested Client {client}");
+            return null;
+        }
+
+        return _clients[client];
     }
 
     //  Checks if client is in clients, removes client if true
@@ -178,18 +176,34 @@ public class RemoteServer
         var clientFound = false;
         foreach (var c in _clients)
         {
-            if (c.Key.Client.Equals(client))
-            {
-                _clients.Remove(c.Key);
-                clientFound = true;
-                break;
-            }
+            if (c.Key != client) { continue; }
+            
+            _clients.Remove(c.Key);
+            clientFound = true;
         }
         
         if (!clientFound)
         {
-            Console.WriteLine($"RemoteServer::RemoveClient: No Client could be found...Requested client: {client}");
+            Console.WriteLine($"RemoteServer::RemoveClient: No Client could be found...Requested client: {_clients[client].GetXivName()}");
         }
+    }
+
+
+    public Dictionary<long, Room> GetRooms()
+    {
+        return _rooms;
+    }
+
+    public Room? GetRoomFromId(long roomId)
+    {
+        
+        if (!_rooms.TryGetValue(roomId, out var room))
+        {
+            Console.WriteLine($"No room exists. Requested room: Room{roomId}");
+            return null;
+        }
+
+        return _rooms[roomId];
     }
     
     //  Executes Commands on the server.
@@ -203,30 +217,37 @@ public class RemoteServer
         var commandByte = (int)message[0];
         var commandArgument = message[1..];
         
+        if (!_clients.ContainsKey(client) && commandByte != 1)
+        {
+            return "Attempted to run command without being a valid Client...";
+        }
         
-        var route = (CommandRoute)(commandByte - '0');
+        var route = (CommandRoute)(commandByte);
         
         switch (route)
         {
             //  Ping = 0
             case CommandRoute.Ping:
-                return _commands.Ping(client, commandArgument);
+                return _commands.Ping(_clients[client], commandArgument);
             //  LogIn = 1,
             case CommandRoute.LogIn:
                 return AddNewClients(client, commandArgument);
             //  LogOut = 2,
             case CommandRoute.LogOut:
-                return _commands.RemoveClient(client, commandArgument);
+                return _commands.RemoveClient(_clients[client], commandArgument);
             //  StartGame = 3,
             case CommandRoute.StartGame:
                 return _commands.StartGame(client, commandArgument);
             //  EndGame = 4,
             case CommandRoute.EndGame:
                 return "EndGame";
-            //  JoinRoom = 5,
+            //  CreateRoom = 5,
+            case CommandRoute.CreateRoom:
+                return _commands.CreateRoom(_clients[client], commandArgument);
+            //  JoinRoom = 6,
             case CommandRoute.JoinRoom:
-                return "JoinRoom";
-            //  LeaveRoom = 6
+                return _commands.JoinRoom(_clients[client], commandArgument);
+            //  LeaveRoom = 7
             case CommandRoute.LeaveRoom:
                 return "LeaveRoom";
             default:
