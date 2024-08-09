@@ -7,7 +7,7 @@ public class Client(TcpClient client, string xivName, RemoteServer Server)
 {
     private TcpClient TcpClient { get; set; } = client;
     private string XivName { get; set; } = xivName;
-    private bool BInUnoGame { get; set; }
+    private bool BInUnoGame { get; set; } = false;
     private DateTime LastActive { get; set; }
     
     private Room? CurrentRoom { get; set; }
@@ -20,7 +20,7 @@ public class Client(TcpClient client, string xivName, RemoteServer Server)
 
     public void SetClient(Client passedClient)
     {
-        this.TcpClient = passedClient.TcpClient;
+        TcpClient = passedClient.TcpClient;
     }
 
     public string GetXivName()
@@ -53,7 +53,7 @@ public class Client(TcpClient client, string xivName, RemoteServer Server)
         return CurrentRoom.GetRoomId();
     }
     
-    public void SetRoomId(long newValue)
+    public void SetRoomId(int newValue)
     {
         CurrentRoom!.SetRoomId(newValue);
     }

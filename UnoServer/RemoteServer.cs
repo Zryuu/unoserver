@@ -25,7 +25,7 @@ public class RemoteServer
     private const int AfkTimer = 30;
     private Dictionary<TcpClient, Client> _clients = new Dictionary<TcpClient, Client>();
     private Dictionary<Client, DateTime> _lastActiveTime = new Dictionary<Client, DateTime>();
-    private Dictionary<long, Room> _rooms = new Dictionary<long, Room>();
+    private Dictionary<int, Room> _rooms = new Dictionary<int, Room>();
 
     public NetworkStream Stream;
 
@@ -142,8 +142,9 @@ public class RemoteServer
         var newClient = new Client(client, clientId, this);
             newClient.SetXivName(clientId);
             newClient.SetBInGame(false);
-            
+            newClient.SetLastActive(DateTime.Now);
         _clients.Add(client, newClient);
+        
         Console.WriteLine($"Added new client: {newClient.GetXivName()}");
         return $"UNO: Successfully connected to Server. Welcome {newClient.GetXivName()}!";
     }
@@ -194,7 +195,7 @@ public class RemoteServer
         Stream.Write(commandResponseBytes, 0, commandResponseBytes.Length);
     }
     
-    public Dictionary<long, Room> GetRooms()
+    public Dictionary<int, Room> GetRooms()
     {
         return _rooms;
     }
@@ -212,7 +213,7 @@ public class RemoteServer
         
     }
 
-    public Room? GetRoomFromId(long roomId)
+    public Room? GetRoomFromId(int roomId)
     {
         
         if (!_rooms.TryGetValue(roomId, out var room))

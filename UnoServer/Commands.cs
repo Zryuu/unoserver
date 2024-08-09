@@ -15,6 +15,7 @@ public class Commands(RemoteServer server)
         }
         
         Console.WriteLine($"Ping received from {client.GetXivName()}");
+        client.SetLastActive(DateTime.Now);
         return 1.ToString();
     }
 
@@ -36,9 +37,9 @@ public class Commands(RemoteServer server)
             //  Lease Room
         }
 
-        if (!long.TryParse(command, out var part))
+        if (!int.TryParse(command, out var part))
         {
-            part = (long)Convert.ToInt64(command);
+            part = Convert.ToInt32(command);
         }
          
         
@@ -83,7 +84,7 @@ public class Commands(RemoteServer server)
     
     public string LeaveRoom(Client client, string command)
     {
-        var givenId = long.Parse(command);
+        var givenId = int.Parse(command);
 
         if (client.GetCurrentRoom() == null)
         {
@@ -92,12 +93,12 @@ public class Commands(RemoteServer server)
         
         if (client.GetRoomId() != givenId)
         {
-            if (server.GetRooms().ContainsKey((long)client.GetRoomId()!) == false)
+            if (server.GetRooms().ContainsKey((int)client.GetRoomId()!) == false)
             {
                 client.SetCurrentRoom(null!);
             }
             
-            server.GetRoomFromId((long)client.GetRoomId()!)!.RemoveClientFromRoom(client);
+            server.GetRoomFromId((int)client.GetRoomId()!)!.RemoveClientFromRoom(client);
             client.SetCurrentRoom(null!);
         }
 

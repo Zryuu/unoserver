@@ -4,7 +4,7 @@ public delegate void OnClientConnected(Client client);
 
 public class Room
 {
-    private long RoomId { get; set; }
+    private int RoomId { get; set; }
     private int MaxPlayers { get; set; }
     private Client Host { get; set; }
     public List<Client> CurrentPlayers { get; set; }
@@ -18,6 +18,7 @@ public class Room
         CreateRoomId();
         AddClientToRoom(client, RoomId);
         SetHost(client);
+        SetMaxPlayers(maxPlayers);
         
         //  Setup Delegate for UpdateCurrentPlayersInRoom() on Player Join/Leave.
         OnClientConnected += UpdateCurrentPlayersInRoom;
@@ -27,12 +28,12 @@ public class Room
         UpdateCurrentPlayersInRoom(client);
     }
     
-    public long GetRoomId()
+    public int GetRoomId()
     {
         return RoomId;
     }
 
-    public void SetRoomId(long id)
+    public void SetRoomId(int id)
     {
         RoomId = id;
     }
@@ -41,7 +42,7 @@ public class Room
     {
         
         var random = new Random();
-        var rand = random.NextInt64(1111, 97898);
+        var rand = random.Next(1111, 97898);
 
         RoomId = rand;
     }
