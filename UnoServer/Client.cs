@@ -3,11 +3,11 @@ using System.Runtime.InteropServices.JavaScript;
 
 namespace UnoServer;
 
-public class Client(TcpClient client, string XIVName, RemoteServer Server)
+public class Client(TcpClient client, string xivName, RemoteServer Server)
 {
-    private TcpClient client { get; set; }
-    private string XivName { get; set; }
-    private bool BInGame { get; set; }
+    private TcpClient TcpClient { get; set; } = client;
+    private string XivName { get; set; } = xivName;
+    private bool BInUnoGame { get; set; }
     private DateTime LastActive { get; set; }
     
     private Room? CurrentRoom { get; set; }
@@ -15,12 +15,12 @@ public class Client(TcpClient client, string XIVName, RemoteServer Server)
     
     public TcpClient GetClient()
     {
-        return client;
+        return TcpClient;
     }
 
     public void SetClient(Client passedClient)
     {
-        this.client = passedClient.client;
+        this.TcpClient = passedClient.TcpClient;
     }
 
     public string GetXivName()
@@ -35,12 +35,12 @@ public class Client(TcpClient client, string XIVName, RemoteServer Server)
 
     public bool GetBInGame(Client passedClient)
     {
-        return passedClient.BInGame;
+        return passedClient.BInUnoGame;
     }
     
     public void SetBInGame(bool newValue)
     {
-        BInGame = newValue;
+        BInUnoGame = newValue;
     }
 
     public long? GetRoomId()
