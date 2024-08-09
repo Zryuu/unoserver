@@ -1,24 +1,30 @@
 ﻿namespace UnoServer;
 
+public delegate void OnClientConnected(Client client);
+
 public class Room
 {
     private long RoomId { get; set; }
     private int MaxPlayers { get; set; }
     private Client Host { get; set; }
     public List<Client> CurrentPlayers { get; set; }
+    private readonly RemoteServer _server;
+    public event OnClientConnected OnClientConnected;
     
-    public RemoteServer Server;
-
     public Room(Client client, RemoteServer server, int maxPlayers)
     {
-        this.Server = server;
+        _server = server;
         
         CreateRoomId();
         AddClientToRoom(client, RoomId);
         SetHost(client);
         
+        //  Setup Delegate for UpdateCurrentPlayersInRoom() on Player Join/Leave.
+        OnClientConnected += UpdateCurrentPlayersInRoom;
+        
         Console.WriteLine($"Room{RoomId} created by {client.GetXivName()}");
         
+        UpdateCurrentPlayersInRoom(client);
     }
     
     public long GetRoomId()
@@ -40,6 +46,31 @@ public class Room
         RoomId = rand;
     }
 
+    private void DeleteRoom()
+    {
+        if (CurrentPlayers.Count > 0) return;
+        
+        Console.WriteLine($"Room{RoomId}'s host is {Host.GetXivName()} but room has no members. Deleting room...");
+
+        //  If Client is an active client, RemoveHost
+        if (_server.GetClients().ContainsValue(Host))
+        {
+            RemoveHost();
+        }
+
+        //  Checks if room is in Rooms.
+        if (!_server.GetRooms().ContainsValue(this)) return;
+        
+        var currentRoom = _server.GetRoomfromRef(this);
+
+        if (currentRoom == null)
+        {
+            Console.WriteLine($"Room{RoomId} isn't in Rooms...How was this even run?");
+        }
+
+        _server.GetRooms().Remove(RoomId);
+    }
+    
     public int GetMaxPlayers()
     {
         return MaxPlayers;
@@ -55,22 +86,59 @@ public class Room
         return CurrentPlayers;
     }
     
-    public string UpdateCurrentPlayersInRoom()
+    //  This prob doesn't need a return statement...
+    public void UpdateCurrentPlayersInRoom(Client client)
     {
+        
+        //  If Room has no members. Delete room.
+        if (CurrentPlayers.Count < 1)
+        {
+            DeleteRoom();
+            return;
+        }
+        
+        var players = new string[CurrentPlayers.Count];
+        var playerNames = "";
+        
+        
+        //  Loop through all players, Stitch String of names.
         foreach (var player in CurrentPlayers)
         {
-            //  Loop through all players, get name.
-            //  User Server to send message with CurrentPlayers and all names but theirs.
-            
-            Server.
+            //  Gonna use ; as a string separator
+            playerNames += player.GetXivName() + ";";
         }
         
         //  Using CurrentPlayers, send message telling everyone Whose in the room.
-        //  msg format: amount of players, player names[].
-
-        return $"{1.ToString()}";
+        foreach (var player in CurrentPlayers)
+        {
+            //  msg format: commandByte, amount of players, player names[].
+            _server.SendMessageToClient($"{8.ToString()}{CurrentPlayers.Count}{playerNames}");
+            
+            return;
+        }
     }
 
+    public bool RemoveHost()
+    {
+        var hostClient = _server.GetClient(Host.GetClient());
+
+        //  Checks if Host Client's null, return.
+        if (hostClient == null)
+        {
+            return false;
+        }
+
+        //  If Host Client's roomID matches room. Set Host's Room to null.
+        if (hostClient!.GetRoomId() == RoomId)
+        {
+            hostClient.SetCurrentRoom(null!);
+        }
+        
+        RemoveClientFromRoom(hostClient);
+        
+        return true;
+    }
+    
     public int AddClientToRoom(Client client, long givenId)
     {
         if (givenId != RoomId)
@@ -87,6 +155,9 @@ public class Room
         
         CurrentPlayers.Add(client);
         Console.WriteLine($"{client.GetXivName()} joined Room{givenId}.");
+        
+        OnOnClientConnected(client);
+        
         return 1;
     }
 
@@ -102,7 +173,7 @@ public class Room
         CurrentPlayers.Remove(client);
         return true;
     }
-
+    
     public Client GetHost()
     {
         return Host;
@@ -112,4 +183,8 @@ public class Room
         Host = client;
     }
     
+    protected virtual void OnOnClientConnected(Client client)
+    {
+        OnClientConnected?.Invoke(client);
+    }
 }

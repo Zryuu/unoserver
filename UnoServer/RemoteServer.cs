@@ -8,8 +8,8 @@ namespace UnoServer;
 internal enum CommandRoute
 {
     Ping = 0,
-    LogIn = 1,
-    LogOut = 2,
+    Login = 1,
+    Logout = 2,
     StartGame = 3,
     EndGame = 4,
     CreateRoom = 5,
@@ -199,6 +199,19 @@ public class RemoteServer
         return _rooms;
     }
 
+    public Room? GetRoomfromRef(Room room)
+    {
+        var id = room.GetRoomId();
+        if (!_rooms.TryGetValue(id, out var foundRoom))
+        {
+            Console.WriteLine($"No room exists. Requested room: Room{id}");
+            return null;
+        }
+
+        return _rooms[id];
+        
+    }
+
     public Room? GetRoomFromId(long roomId)
     {
         
@@ -235,10 +248,10 @@ public class RemoteServer
             case CommandRoute.Ping:
                 return _commands.Ping(_clients[client], commandArgument);
             //  LogIn = 1,
-            case CommandRoute.LogIn:
+            case CommandRoute.Login:
                 return AddNewClients(client, commandArgument);
             //  LogOut = 2,
-            case CommandRoute.LogOut:
+            case CommandRoute.Logout:
                 return _commands.RemoveClient(_clients[client], commandArgument);
             //  StartGame = 3,
             case CommandRoute.StartGame:
