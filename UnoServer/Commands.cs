@@ -59,21 +59,8 @@ public class Commands(RemoteServer server)
         var part = int.Parse(command);
         
         Room room = new Room(client, server, part);
-                
-        //  Check if duplicate ID, reroll if true.
-        while (true)
-        {
-            if (server.GetRoomFromId(room.GetRoomId()) != null)
-            {
-                room.CreateRoomId();
-                Console.WriteLine("CreatedRoomId");
-                continue;
-            }
-
-            Console.WriteLine("Room Id succ");
-            break;
-        }
-
+        
+        
         //  Logic to parse message to set MaxPlayers.
         
         server.AddRoomToRooms(room);

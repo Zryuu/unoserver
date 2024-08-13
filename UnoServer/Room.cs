@@ -17,13 +17,17 @@ public class Room
         
         CreateRoomId();
         Console.WriteLine("Room: CreateRoomId");
-        CurrentPlayers = new List<Client>();
-        Console.WriteLine("Room: InitList");
+        
         SetMaxPlayers(maxPlayers);
         Console.WriteLine("Room: SetMaxPlayers");
         Console.WriteLine($"passed: {maxPlayers}. Set: {GetMaxPlayers()}");
+        
+        CurrentPlayers = new List<Client>(maxPlayers);
+        Console.WriteLine("Room: InitList");
+        
         AddClientToRoom(client, RoomId);
         Console.WriteLine("Room: Added Client");
+        
         SetHost(client);
         Console.WriteLine("Room: SetHost");
         
@@ -51,6 +55,19 @@ public class Room
         var random = new Random();
         var rand = random.Next(1111, 97898);
 
+        //  Check if duplicate ID, reroll if true.
+        while (true)
+        {
+            if (_server.GetRoomFromId(rand) != null)
+            {
+                Console.WriteLine("Room already exists. ReRolling ID");
+                continue;
+            }
+
+            Console.WriteLine("Room Id succ");
+            break;
+        }
+        
         RoomId = rand;
     }
 
