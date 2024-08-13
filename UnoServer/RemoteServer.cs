@@ -230,6 +230,7 @@ public class RemoteServer
     {
         if (string.IsNullOrEmpty(message) || message.Length < 2)
         {
+            Console.WriteLine("Invalid command format.");
             return "Invalid command format.";
         }
         
@@ -238,6 +239,7 @@ public class RemoteServer
         
         if (!_clients.ContainsKey(client) && commandByte != 1)
         {
+            Console.WriteLine("Attempted to run command without being a valid Client...");
             return "Attempted to run command without being a valid Client...";
         }
         
