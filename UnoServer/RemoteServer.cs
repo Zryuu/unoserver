@@ -234,17 +234,14 @@ public class RemoteServer
             return "Invalid command format.";
         }
         
-        var commandByte = (int)message[0];
+        var commandByte = int.Parse(message[0].ToString());
         var commandArgument = message[1..];
-       
-        //Fix this...idk why "commandByte != 1" is doing nothing as op1 should be false no matter what...
-        /*
+        
         if (!_clients.ContainsKey(client) && commandByte != 1)
         {
             Console.WriteLine("Attempted to run command without being a valid Client...");
             return "Attempted to run command without being a valid Client...";
         }
-        */
         
         var route = (CommandRoute)(commandByte);
         Console.WriteLine($"Route: {route}");
