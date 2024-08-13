@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("UnoServer")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e3c94c5cc0be0ed3d950fe22b7a7cdda5832032e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5f6eb06f3805484530840c9861da4bc4ab6b194b")]
 [assembly: System.Reflection.AssemblyProductAttribute("UnoServer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("UnoServer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

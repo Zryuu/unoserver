@@ -158,6 +158,12 @@ public class Room
 
         if (CurrentPlayers.Count >= MaxPlayers)
         {
+
+            for (var i = 0; i < CurrentPlayers.Count; i++)
+            {
+                Console.WriteLine($"Player{i}: {CurrentPlayers[i].GetXivName()}");
+            }
+            
             Console.WriteLine($"{client.GetXivName()} attempted to join Room{givenId} but room is full.");
             return -1;
         }
