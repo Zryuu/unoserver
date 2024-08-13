@@ -22,7 +22,7 @@ public class Room
         Console.WriteLine("Room: SetMaxPlayers");
         Console.WriteLine($"passed: {maxPlayers}. Set: {GetMaxPlayers()}");
         
-        CurrentPlayers = new List<Client>(maxPlayers);
+        CurrentPlayers = new List<Client>();
         Console.WriteLine("Room: InitList");
         
         //  Setup Delegate for UpdateCurrentPlayersInRoom() on Player Join/Leave.
@@ -172,9 +172,8 @@ public class Room
         }
         
         CurrentPlayers.Add(client);
-        client.SetCurrentRoom(this);
-        Console.WriteLine($"{client.GetXivName()} joined Room{givenId}.");
-        
+        Console.WriteLine($"Added Client ran");
+
         OnOnClientConnected(client);
         
         return 1;

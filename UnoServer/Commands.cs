@@ -66,11 +66,9 @@ public class Commands(RemoteServer server)
         server.AddRoomToRooms(room);
         Console.WriteLine("Added Room to Rooms");
         
-        client.SetCurrentRoom(room);
-        Console.WriteLine("Set Current Room");
-        
+        //  Rewrite this to be an if statement. If Room.AddClientToRoom returns true, SetCurrentRoom is run.
         room.AddClientToRoom(client, room.GetRoomId());
-        Console.WriteLine("Added Client to Room");
+        Console.WriteLine($"{client.GetXivName()} joined Room{room.GetRoomId()}.");
         
         room.SetHost(client);
         Console.WriteLine("Set Host");
