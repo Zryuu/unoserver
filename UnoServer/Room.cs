@@ -25,12 +25,6 @@ public class Room
         CurrentPlayers = new List<Client>(maxPlayers);
         Console.WriteLine("Room: InitList");
         
-        AddClientToRoom(client, RoomId);
-        Console.WriteLine("Room: Added Client");
-        
-        SetHost(client);
-        Console.WriteLine("Room: SetHost");
-        
         //  Setup Delegate for UpdateCurrentPlayersInRoom() on Player Join/Leave.
         OnClientConnected += UpdateCurrentPlayersInRoom;
         
@@ -64,7 +58,7 @@ public class Room
                 continue;
             }
 
-            Console.WriteLine("Room Id succ");
+            Console.WriteLine($"Room Id succ, ID: {rand}");
             break;
         }
         
@@ -165,7 +159,7 @@ public class Room
         return true;
     }
     
-    public int AddClientToRoom(Client client, long givenId)
+    public int AddClientToRoom(Client client, int givenId)
     {
         if (givenId != RoomId)
         {
