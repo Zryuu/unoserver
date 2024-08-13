@@ -63,18 +63,18 @@ public class RemoteServer
     {
         TcpClient tcpClient = (TcpClient)obj;
         Stream = tcpClient.GetStream();
-        byte[] buffer = new byte[1024];
+        var buffer = new byte[1024];
         int bytesRead;
 
         bytesRead = Stream.Read(buffer, 0, buffer.Length);
-        string data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+        var data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
         Console.WriteLine($"Received: {data} for login attempt");
 
         //  Adds client to Server
-        string response = ExecuteCommand(data, tcpClient);
+        var response = ExecuteCommand(data, tcpClient);
         SendMessageToClient(response);
 
-        if (response.StartsWith("UNO: Successfully"))
+        if (response.StartsWith("UNO: Successfully connected to Server. Welcome "))
         {
             Client client = _clients[tcpClient];
             client.SetLastActive(DateTime.Now);
@@ -253,10 +253,11 @@ public class RemoteServer
             //  Ping = 0
             case CommandRoute.Ping:
                 return _commands.Ping(_clients[client], commandArgument);
-            //  LogIn = 1,
+            //  Login = 1,
             case CommandRoute.Login:
+                Console.WriteLine("AddNewClient");
                 return AddNewClients(client, commandArgument);
-            //  LogOut = 2,
+            //  Logout = 2,
             case CommandRoute.Logout:
                 return _commands.RemoveClient(_clients[client], commandArgument);
             //  StartGame = 3,
@@ -275,6 +276,7 @@ public class RemoteServer
             case CommandRoute.LeaveRoom:
                 return "LeaveRoom";
             default:
+                Console.WriteLine("Unknown command");
                 return "Unknown command";
                 
         }
