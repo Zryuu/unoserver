@@ -12,6 +12,11 @@ public class Client(TcpClient client, string xivName, RemoteServer Server)
     private Room? CurrentRoom { get; set; }
     
     
+    public void SetClient(TcpClient client)
+    {
+        TcpClient = client;
+    }
+    
     public TcpClient GetClient()
     {
         return TcpClient;
