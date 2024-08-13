@@ -81,8 +81,10 @@ public class Commands(RemoteServer server)
         
         client.SetCurrentRoom(room);
         Console.WriteLine("Set Current Room");
+        
         client.SetRoomId(room.GetRoomId());
         Console.WriteLine("Set Room Id");
+        
         room.SetMaxPlayers(part);
         Console.WriteLine("Set Max Players");
         

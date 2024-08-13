@@ -17,7 +17,7 @@ public class Room
         
         CreateRoomId();
         Console.WriteLine("Room: CreateRoomId");
-        CurrentPlayers = new List<Client> { client };
+        CurrentPlayers = new List<Client>();
         Console.WriteLine("Room: InitList");
         SetMaxPlayers(maxPlayers);
         Console.WriteLine("Room: SetMaxPlayers");
