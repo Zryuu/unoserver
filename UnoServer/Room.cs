@@ -16,10 +16,10 @@ public class Room
         _server = server;
         
         CreateRoomId();
-        AddClientToRoom(client, RoomId);
         CurrentPlayers = new List<Client> { client };
         SetHost(client);
         SetMaxPlayers(maxPlayers);
+        AddClientToRoom(client, RoomId);
         
         //  Setup Delegate for UpdateCurrentPlayersInRoom() on Player Join/Leave.
         OnClientConnected += UpdateCurrentPlayersInRoom;
