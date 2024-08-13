@@ -78,6 +78,7 @@ public class Commands(RemoteServer server)
         
         server.AddRoomToRooms(room);
         Console.WriteLine("Added Room to Rooms");
+        
         client.SetCurrentRoom(room);
         Console.WriteLine("Set Current Room");
         client.SetRoomId(room.GetRoomId());

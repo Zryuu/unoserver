@@ -9,8 +9,8 @@ public class Client(TcpClient client, string xivName, RemoteServer Server)
     private string XivName { get; set; } = xivName;
     private bool BInUnoGame { get; set; } = false;
     private DateTime LastActive { get; set; }
-    
     private Room? CurrentRoom { get; set; }
+    
     
     public TcpClient GetClient()
     {
@@ -54,6 +54,12 @@ public class Client(TcpClient client, string xivName, RemoteServer Server)
 
     public void SetRoomId(int newValue)
     {
+        if (CurrentRoom == null)
+        {
+            Console.WriteLine("No valid room to set ID.");
+            return;
+        }
+        
         CurrentRoom!.SetRoomId(newValue);
     }
 
@@ -74,18 +80,20 @@ public class Client(TcpClient client, string xivName, RemoteServer Server)
 
     public void SetCurrentRoom(Room? room)
     {
-        if (CurrentRoom != null)
-        {
-            CurrentRoom.RemoveClientFromRoom(this);
-            Console.WriteLine("SetCurrentRoom RemoveClientFromRoom func ran");
-        }
 
-        //  If Room is null, return.
+        //  Saves copy of currentRoom.
+        var previousRoom = CurrentRoom;
+        
+        //  If passed room is null, return.
         if (room == null) return;
         
-        //  If Room isn't, set currentroom to room and add client to room, via room.
+        //  If passed room isn't null, set currentRoom to room and add client to room.
         CurrentRoom = room;
         CurrentRoom!.AddClientToRoom(this, room.GetRoomId());
+
+        //  If previousRoom is valid, remove client from room.
+        previousRoom?.RemoveClientFromRoom(this);
+        Console.WriteLine("SetCurrentRoom RemoveClientFromRoom func ran");
 
     }
     
