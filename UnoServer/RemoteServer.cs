@@ -247,6 +247,7 @@ public class RemoteServer
         */
         
         var route = (CommandRoute)(commandByte);
+        Console.WriteLine($"Route: {route}");
         
         switch (route)
         {
