@@ -75,8 +75,13 @@ public class Commands(RemoteServer server)
         //  Logic to parse message to set MaxPlayers.
         
         server.AddRoomToRooms(room);
+        Console.WriteLine("Added Room to Rooms");
+        client.SetCurrentRoom(room);
+        Console.WriteLine("Set Current Room");
         client.SetRoomId(room.GetRoomId());
+        Console.WriteLine("Set Room Id");
         room.SetMaxPlayers(part);
+        Console.WriteLine("Set Max Players");
         
         var response = $"{1.ToString()}{room.GetRoomId()}";
 
