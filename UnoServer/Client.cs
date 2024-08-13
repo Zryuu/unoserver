@@ -12,7 +12,6 @@ public class Client(TcpClient client, string xivName, RemoteServer Server)
     
     private Room? CurrentRoom { get; set; }
     
-    
     public TcpClient GetClient()
     {
         return TcpClient;
@@ -73,12 +72,20 @@ public class Client(TcpClient client, string xivName, RemoteServer Server)
         return CurrentRoom;
     }
 
-    public void SetCurrentRoom(Room room)
+    public void SetCurrentRoom(Room? room)
     {
-        CurrentRoom?.RemoveClientFromRoom(this);
+        if (CurrentRoom != null)
+        {
+            CurrentRoom.RemoveClientFromRoom(this);
+        }
+
+        //  If Room is null, return.
+        if (room == null) return;
         
+        //  If Room isn't, set currentroom to room and add client to room, via room.
         CurrentRoom = room;
-        CurrentRoom.AddClientToRoom(this, room.GetRoomId());
+        CurrentRoom!.AddClientToRoom(this, room.GetRoomId());
+
     }
     
 }

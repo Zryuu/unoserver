@@ -145,6 +145,8 @@ public class RemoteServer
             newClient.SetLastActive(DateTime.Now);
         _clients.Add(client, newClient);
         
+        newClient.SetCurrentRoom(null);
+        
         Console.WriteLine($"Added new client: {newClient.GetXivName()}");
         return $"UNO: Successfully connected to Server. Welcome {newClient.GetXivName()}!";
     }

@@ -63,20 +63,21 @@ public class Commands(RemoteServer server)
         //  Check if duplicate ID, reroll if true.
         while (true)
         {
-            if (server.GetRoomFromId(room.GetRoomId()) == null)
+            if (server.GetRoomFromId(room.GetRoomId()) != null)
             {
                 room.CreateRoomId();
-                break;
+                continue;
             }
 
-            continue;
+            break;
         }
 
         //  Logic to parse message to set MaxPlayers.
         
         server.AddRoomToRooms(room);
-        
         client.SetRoomId(room.GetRoomId());
+        room.SetMaxPlayers(part);
+        
         var response = $"{1.ToString()}{room.GetRoomId()}";
 
         return response;
@@ -86,11 +87,13 @@ public class Commands(RemoteServer server)
     {
         var givenId = int.Parse(command);
 
+        //  If Current Room is null, return
         if (client.GetCurrentRoom() == null)
         {
             return $"{0.ToString()}";
         }
         
+        //  If currentroom's ID doesnt equal given ID
         if (client.GetRoomId() != givenId)
         {
             if (server.GetRooms().ContainsKey((int)client.GetRoomId()!) == false)
