@@ -16,10 +16,15 @@ public class Room
         _server = server;
         
         CreateRoomId();
+        Console.WriteLine("Room: CreateRoomId");
         CurrentPlayers = new List<Client> { client };
-        SetHost(client);
+        Console.WriteLine("Room: InitList");
         SetMaxPlayers(maxPlayers);
+        Console.WriteLine("Room: SetMaxPlayers");
         AddClientToRoom(client, RoomId);
+        Console.WriteLine("Room: Added Client");
+        SetHost(client);
+        Console.WriteLine("Room: SetHost");
         
         //  Setup Delegate for UpdateCurrentPlayersInRoom() on Player Join/Leave.
         OnClientConnected += UpdateCurrentPlayersInRoom;

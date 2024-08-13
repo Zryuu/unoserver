@@ -83,7 +83,7 @@ public class RemoteServer
             while ((bytesRead = Stream.Read(buffer, 0, buffer.Length)) != 0)
             {
                 data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                Console.WriteLine($"Received: {data} from {_clients[tcpClient]}");
+                Console.WriteLine($"Received: {data} from {_clients[tcpClient].GetXivName()}");
                 _lastActiveTime[_clients[tcpClient]] = DateTime.Now;
                 string commandResponse = ExecuteCommand(data, tcpClient);
                 SendMessageToClient(commandResponse);
@@ -147,7 +147,6 @@ public class RemoteServer
         
         newClient.SetCurrentRoom(null);
         
-        Console.WriteLine($"Added new client: {newClient.GetXivName()}");
         return $"UNO: Successfully connected to Server. Welcome {newClient.GetXivName()}!";
     }
 
@@ -246,7 +245,6 @@ public class RemoteServer
         }
         
         var route = (CommandRoute)(commandByte);
-        Console.WriteLine($"Route: {route}");
         
         switch (route)
         {
@@ -255,7 +253,6 @@ public class RemoteServer
                 return _commands.Ping(_clients[client], commandArgument);
             //  Login = 1,
             case CommandRoute.Login:
-                Console.WriteLine("AddNewClient");
                 return AddNewClients(client, commandArgument);
             //  Logout = 2,
             case CommandRoute.Logout:
