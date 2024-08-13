@@ -66,10 +66,10 @@ public class Commands(RemoteServer server)
             if (server.GetRoomFromId(room.GetRoomId()) == null)
             {
                 room.CreateRoomId();
-                continue;
+                break;
             }
 
-            break;
+            continue;
         }
 
         //  Logic to parse message to set MaxPlayers.
