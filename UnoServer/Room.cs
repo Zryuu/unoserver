@@ -157,6 +157,7 @@ public class Room
         }
         
         CurrentPlayers.Add(client);
+        client.SetCurrentRoom(this);
         Console.WriteLine($"{client.GetXivName()} joined Room{givenId}.");
         
         OnOnClientConnected(client);
