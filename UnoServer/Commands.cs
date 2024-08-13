@@ -69,6 +69,11 @@ public class Commands(RemoteServer server)
         client.SetCurrentRoom(room);
         Console.WriteLine("Set Current Room");
 
+        if (room.GetRoomId() == null)
+        {
+            Console.WriteLine("it was the ID");
+        }
+        
         room.AddClientToRoom(client, room.GetRoomId());
         Console.WriteLine("Added Client to Room");
         
