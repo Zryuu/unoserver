@@ -109,14 +109,6 @@ public class Room
     public void UpdateCurrentPlayersInRoom(Client client)
     {
         
-        //  If Room has no members. Delete room.
-        if (CurrentPlayers.Count < 1)
-        {
-            Console.WriteLine("CurrentPlayers < 1. Deleting room...");
-            DeleteRoom();
-            return;
-        }
-        
         var players = new string[CurrentPlayers.Count];
         var playerNames = "";
         
@@ -198,6 +190,15 @@ public class Room
         
         Console.WriteLine($"Client: {client.GetXivName()} Left Room{RoomId}");
         CurrentPlayers.Remove(client);
+        
+        //  If Room has no members. Delete room.
+        if (CurrentPlayers.Count < 1)
+        {
+            Console.WriteLine("CurrentPlayers < 1. Deleting room...");
+            DeleteRoom();
+            return true;
+        }
+        
         return true;
     }
     
