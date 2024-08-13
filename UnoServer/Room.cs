@@ -95,6 +95,7 @@ public class Room
         //  If Room has no members. Delete room.
         if (CurrentPlayers.Count < 1)
         {
+            Console.WriteLine("CurrentPlayers < 1. Deleting room...");
             DeleteRoom();
             return;
         }
