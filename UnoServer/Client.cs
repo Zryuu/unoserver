@@ -77,6 +77,7 @@ public class Client(TcpClient client, string xivName, RemoteServer Server)
         if (CurrentRoom != null)
         {
             CurrentRoom.RemoveClientFromRoom(this);
+            Console.WriteLine("SetCurrentRoom RemoveClientFromRoom func ran");
         }
 
         //  If Room is null, return.

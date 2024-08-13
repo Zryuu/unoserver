@@ -66,9 +66,11 @@ public class Commands(RemoteServer server)
             if (server.GetRoomFromId(room.GetRoomId()) != null)
             {
                 room.CreateRoomId();
+                Console.WriteLine("CreatedRoomId");
                 continue;
             }
 
+            Console.WriteLine("Room Id succ");
             break;
         }
 
