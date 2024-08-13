@@ -21,6 +21,7 @@ public class Room
         Console.WriteLine("Room: InitList");
         SetMaxPlayers(maxPlayers);
         Console.WriteLine("Room: SetMaxPlayers");
+        Console.WriteLine($"passed: {maxPlayers}. Set: {GetMaxPlayers()}");
         AddClientToRoom(client, RoomId);
         Console.WriteLine("Room: Added Client");
         SetHost(client);
