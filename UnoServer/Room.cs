@@ -17,6 +17,7 @@ public class Room
         
         CreateRoomId();
         AddClientToRoom(client, RoomId);
+        CurrentPlayers = new List<Client> { client };
         SetHost(client);
         SetMaxPlayers(maxPlayers);
         
