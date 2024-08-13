@@ -277,6 +277,8 @@ public class RemoteServer
                 return "LeaveRoom";
             default:
                 Console.WriteLine("Unknown command");
+                Console.WriteLine($"commandByte: {commandByte}");
+                Console.WriteLine($"commandArgument: {commandArgument}");
                 return "Unknown command";
                 
         }
