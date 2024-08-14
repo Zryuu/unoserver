@@ -5,28 +5,30 @@ using System.Text;
 
 namespace UnoServer;
 
-internal enum CommandRoute
+//  CommandBytes received from Server
+internal enum MessageTypeReceive
 {
-    Ping = 00,
-    Login = 01,
-    Logout = 02,
-    StartGame = 03,
-    EndGame = 04,
-    CreateRoom = 05,
-    JoinRoom = 06,
-    LeaveRoom = 07
+    Ping = 0,
+    Login,
+    Logout,
+    StartGame,
+    EndGame,
+    CreateRoom,
+    JoinRoom,
+    LeaveRoom
 }
 
-public enum ResponseByte
+//  CommandBytes sent to Server
+public enum MessageTypeSend
 {
-    Ping = 00,
-    Login = 01,
-    Logout = 02,
-    StartGame = 03,
-    EndGame = 04,
-    JoinRoom = 05,
-    LeaveRoom = 06,
-    UpdateRoom = 07,
+    Ping = 0,
+    Login,
+    Logout,
+    StartGame,
+    EndGame,
+    JoinRoom,
+    LeaveRoom,
+    UpdateRoom,
     Error = 99
 }
 
@@ -151,7 +153,7 @@ public class RemoteServer
         if (_clients.ContainsKey(client))
         {
             Console.WriteLine($"{clientId} is already a client...");
-            return _commands.ResponseType(ResponseByte.Login, $"Already connected to server.");
+            return _commands.ResponseType(MessageTypeSend.Login, $"Already connected to server.");
         }
 
         var newClient = new Client(client, clientId, this);
@@ -163,7 +165,7 @@ public class RemoteServer
         
         newClient.SetCurrentRoom(null);
         
-        return _commands.ResponseType(ResponseByte.Login, $"UNO: Successfully connected to Server. Welcome {newClient.GetXivName()}!");
+        return _commands.ResponseType(MessageTypeSend.Login, $"UNO: Successfully connected to Server. Welcome {newClient.GetXivName()}!");
     }
 
     public void AddRoomToRooms(Room room)
@@ -260,42 +262,42 @@ public class RemoteServer
         if (!_clients.ContainsKey(client) && commandByte != 1)
         {
             Console.WriteLine("Attempted to run command without being a valid Client...");
-            return _commands.ResponseType(ResponseByte.Error, "Attempted to run command without being a valid Client...");
+            return _commands.ResponseType(MessageTypeSend.Error, "Attempted to run command without being a valid Client...");
         }
         
-        var route = (CommandRoute)(commandByte);
+        var route = (MessageTypeReceive)(commandByte);
         
         switch (route)
         {
             //  Ping = 01
-            case CommandRoute.Ping:
+            case MessageTypeReceive.Ping:
                 return _commands.Ping(_clients[client], commandArgument);
             //  Login = 02,
-            case CommandRoute.Login:
+            case MessageTypeReceive.Login:
                 return AddNewClients(client, commandArgument);
             //  Logout = 03,
-            case CommandRoute.Logout:
-                return _commands.RemoveClient(_clients[client], commandArgument);
+            case MessageTypeReceive.Logout:
+                return _commands.RemoveClient(_clients[client]);
             //  StartGame = 04,
-            case CommandRoute.StartGame:
+            case MessageTypeReceive.StartGame:
                 return _commands.StartGame(client, commandArgument);
             //  EndGame = 05,
-            case CommandRoute.EndGame:
+            case MessageTypeReceive.EndGame:
                 return "EndGame";
             //  CreateRoom = 06,
-            case CommandRoute.CreateRoom:
+            case MessageTypeReceive.CreateRoom:
                 return _commands.CreateRoom(_clients[client], commandArgument);
             //  JoinRoom = 07,
-            case CommandRoute.JoinRoom:
+            case MessageTypeReceive.JoinRoom:
                 return _commands.JoinRoom(_clients[client], commandArgument);
             //  LeaveRoom = 08
-            case CommandRoute.LeaveRoom:
+            case MessageTypeReceive.LeaveRoom:
                 return "LeaveRoom";
             default:
                 Console.WriteLine("Unknown command");
                 Console.WriteLine($"commandByte: {commandByte}");
                 Console.WriteLine($"commandArgument: {commandArgument}");
-                return _commands.ResponseType(ResponseByte.Error, "Unknown command");
+                return _commands.ResponseType(MessageTypeSend.Error, "Unknown command");
                 
         }
     }
