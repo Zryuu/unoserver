@@ -398,7 +398,7 @@ public class RemoteServer
         var playerNames = string.Join(";", newRoom.CurrentPlayers.Select(player => player.GetXivName()));
         
         //  Tells client it joined room.
-        return ResponseType(MessageTypeSend.JoinRoom, $"{part}|{playerNames}");
+        return ResponseType(MessageTypeSend.JoinRoom, $"{part}");
     }
     
     public string CreateRoom(Client client, string command)
@@ -429,7 +429,7 @@ public class RemoteServer
         //  This needs to be a macro
         var playerNames = string.Join(";", room.CurrentPlayers.Select(player => player.GetXivName()));
         
-        return ResponseType(MessageTypeSend.JoinRoom, $"{room.GetRoomId()}|{playerNames}");
+        return ResponseType(MessageTypeSend.JoinRoom, $"{room.GetRoomId()}");
     }
     
     //  Removes client from Room.
