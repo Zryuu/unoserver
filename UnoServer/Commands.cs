@@ -54,29 +54,49 @@ public class Commands(RemoteServer server)
     
     public string JoinRoom(Client client, string command)
     {
-
-        if (client.GetRoomId() != null)
-        {
-            //  Leave Room
-            client.SetCurrentRoom(null);
-            server.SendMessageToClient(ResponseType(MessageTypeSend.LeaveRoom, ""));
-        }
-
+        //  int cast the command.
         var part = int.Parse(command);
         
-        //  Check if Room exists 
+        //  Get client's current room ID. If no room, returns null.
+        var id = client.GetRoomId();
+        
+        //  If Client's RoomID is null
+        if (id != null)
+        {
+            //  Client's OldRoom.
+            var oldRoom = server.GetRoomFromId((int)id);
 
+            //  Leave Room server side
+            oldRoom!.RemoveClientFromRoom(client);
+            
+            //  Leave Room client side
+            client.SetCurrentRoom(null);
+            server.SendMessageToClient(ResponseType(MessageTypeSend.LeaveRoom, $"{id}"));
+        }
+        
+        //  Checks if given Room exists in Rooms.
         if (server.GetRoomFromId(part) == null)
         {
             return ResponseType(MessageTypeSend.Error, $"Room: {part}. Doesn't exist...");
         }
         
+
+        
+        //  Add's client to room server side.
         Console.WriteLine($"{client.GetXivName()} joined room: {part}");
         client.SetRoomId(part);
-        
 
         //  Add thing to make check if Client was added to Room.
 
+        //  Client's new room.
+        var newRoom = server.GetRoomFromId(part);
+
+        if (!newRoom!.CheckPlayerPresent(client))
+        {
+            newRoom.AddClientToRoom(client, part);
+        }
+        
+        //  Tells client it joined room.
         return ResponseType(MessageTypeSend.JoinRoom, $"{part}");
     }
     
@@ -99,6 +119,7 @@ public class Commands(RemoteServer server)
         return ResponseType(MessageTypeSend.JoinRoom, $"{room.GetRoomId()}");
     }
     
+    //  Removes client from Room.
     public string LeaveRoom(Client client, string command)
     {
         var givenId = int.Parse(command);
@@ -127,6 +148,7 @@ public class Commands(RemoteServer server)
         return ResponseType(MessageTypeSend.LeaveRoom, $"Left Room{client.GetRoomId()}");
     }
     
+
     public string UpdateCurrentPlayersInRoom(Client client, string command)
     {
         

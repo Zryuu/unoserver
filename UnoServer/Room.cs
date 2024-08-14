@@ -57,6 +57,11 @@ public class Room
         RoomId = rand;
     }
 
+    public bool CheckPlayerPresent(Client client)
+    {
+        return CurrentPlayers.Contains(client);
+    }
+    
     private void DeleteRoom()
     {
         if (CurrentPlayers.Count > 0) return;
