@@ -68,6 +68,7 @@ public class Client(TcpClient client, string xivName, RemoteServer Server)
             }
 
             CurrentRoom = Server.GetRoomFromId(newValue);
+            Console.WriteLine($"Set currentRoom's ID");
         }
         
         CurrentRoom!.SetRoomId(newValue);

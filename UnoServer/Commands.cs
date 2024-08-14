@@ -48,8 +48,9 @@ public class Commands(RemoteServer server)
             return ResponseType(ResponseByte.Error, $"Room: {part}. Doesn't exist...");
         }
         
-        client.SetRoomId(part);
         Console.WriteLine($"{client.GetXivName()} joined room: {part}");
+        client.SetRoomId(part);
+        
 
         //  Add thing to make check if Client was added to Room.
 
