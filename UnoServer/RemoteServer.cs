@@ -141,8 +141,8 @@ public class RemoteServer
             {
                 client.GetClient().Close();
                 Console.WriteLine($"removing inactive client with ID: {_clients[client.GetClient()].GetXivName()}");
-                _clients.Remove(client.GetClient());
                 RemoveClient(client.GetClient());
+                _clients.Remove(client.GetClient());
             }
         }
     }

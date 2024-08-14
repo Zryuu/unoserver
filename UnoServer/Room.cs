@@ -168,8 +168,6 @@ public class Room
         }
         
         CurrentPlayers.Add(client);
-        Console.WriteLine($"Added Client ran");
-
         OnOnClientConnected(client);
         
         return 1;
