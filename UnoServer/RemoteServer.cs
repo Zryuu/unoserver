@@ -15,7 +15,8 @@ internal enum MessageTypeReceive
     EndGame,
     CreateRoom,
     JoinRoom,
-    LeaveRoom
+    LeaveRoom,
+    UpdateRoom
 }
 
 //  CommandBytes sent to Server
@@ -293,6 +294,8 @@ public class RemoteServer
             //  LeaveRoom = 08
             case MessageTypeReceive.LeaveRoom:
                 return "LeaveRoom";
+            //case MessageTypeReceive.UpdateRoom:
+                //return _rooms.UpdateCurrentPlayersInRoom();
             default:
                 Console.WriteLine("Unknown command");
                 Console.WriteLine($"commandByte: {commandByte}");
