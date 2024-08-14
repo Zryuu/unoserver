@@ -21,12 +21,8 @@ public class Room
         
         CurrentPlayers = new List<Client>();
         
-        //  Setup Delegate for UpdateCurrentPlayersInRoom() on Player Join/Leave.
-        OnClientConnected += UpdateCurrentPlayersInRoom;
-        
         Console.WriteLine($"Room{RoomId} created by {client.GetXivName()}");
-        
-        UpdateCurrentPlayersInRoom(client);
+
     }
     
     public int GetRoomId()
@@ -76,11 +72,12 @@ public class Room
         //  Checks if room is in Rooms.
         if (!_server.GetRooms().ContainsValue(this)) return;
         
-        var currentRoom = _server.GetRoomFromRef(this);
+        var currentRoom = _server.CheckRoomInRooms(this);
 
-        if (currentRoom == null)
+        if (!currentRoom)
         {
             Console.WriteLine($"Room{RoomId} isn't in Rooms...How was this even run?");
+            return;
         }
 
         _server.GetRooms().Remove(RoomId);
@@ -102,27 +99,7 @@ public class Room
     }
     
     //  This prob doesn't need a return statement...
-    public void UpdateCurrentPlayersInRoom(Client client)
-    {
-        
-        var players = new string[CurrentPlayers.Count];
-        var playerNames = "";
-        
-        
-        //  Loop through all players, Stitch String of names.
-        foreach (var player in CurrentPlayers)
-        {
-            //  Gonna use ; as a string separator
-            playerNames += player.GetXivName() + ";";
-        }
-        
-        //  Using CurrentPlayers, send message telling everyone Whose in the room.
-        foreach (var player in CurrentPlayers)
-        {
-            //  msg format: commandByte, amount of players, player names[]..
-            _server.SendMessageToClient($"{MessageTypeSend.UpdateRoom}{playerNames}");
-        }
-    }
+    
 
     public bool RemoveHost()
     {

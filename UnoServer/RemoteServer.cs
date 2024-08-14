@@ -46,7 +46,7 @@ public class RemoteServer
     private Dictionary<int, Room> _rooms = new Dictionary<int, Room>();
     public List<Client> InactiveClients = new List<Client>();
 
-    public NetworkStream Stream;
+    private NetworkStream _stream;
 
     private RemoteServer(int port)
     {
@@ -65,6 +65,7 @@ public class RemoteServer
         LoopClients();
     }
 
+    //  Creates thread to handle clients and accepts new tcp streams.
     private void LoopClients()
     {
         while (_isRunning)
@@ -78,14 +79,15 @@ public class RemoteServer
         }
     }
 
+    //  Handles sending, receiving and adding TCPClient's to clients.
     private void HandleClient(object obj)
     {
         TcpClient tcpClient = (TcpClient)obj;
-        Stream = tcpClient.GetStream();
+        _stream = tcpClient.GetStream();
         var buffer = new byte[1024];
         int bytesRead;
 
-        bytesRead = Stream.Read(buffer, 0, buffer.Length);
+        bytesRead = _stream.Read(buffer, 0, buffer.Length);
         var data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
         Console.WriteLine($"Received: {data} for login attempt");
 
@@ -99,7 +101,7 @@ public class RemoteServer
             client.SetLastActive(DateTime.Now);
             Console.WriteLine($"Client connected with ID: {_clients[tcpClient].GetXivName()}");
             
-            while ((bytesRead = Stream.Read(buffer, 0, buffer.Length)) != 0)
+            while ((bytesRead = _stream.Read(buffer, 0, buffer.Length)) != 0)
             {
                 data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
                 Console.WriteLine($"Received: {data} from {_clients[tcpClient].GetXivName()}");
@@ -168,26 +170,26 @@ public class RemoteServer
         return _commands.ResponseType(MessageTypeSend.Login, $"[UNO]: Successfully connected to Server. Welcome {newClient.GetXivName()}!");
     }
 
+    //  Adds new room to rooms list.
     public void AddRoomToRooms(Room room)
     {
         _rooms.Add(room.GetRoomId(), room);
     }
 
-    //  Returns Clients
+    //  Returns Clients dictionary.
     public Dictionary<TcpClient, Client> GetClients()
     {
         return _clients;
     }
     
+    //  Get's Client from clients with TCPClient ref.
     public Client? GetClient(TcpClient client)
     {
-        if (!_clients.ContainsKey(client))
-        {
-            Console.WriteLine($"No client exists. Requested Client {client}");
-            return null;
-        }
+        if (_clients.TryGetValue(client, out var value)) return value;
+        
+        Console.WriteLine($"No client exists. Requested Client {client}");
+        return null;
 
-        return _clients[client];
     }
 
     //  Checks if client is in clients, removes client if true
@@ -212,40 +214,37 @@ public class RemoteServer
         }
     }
 
+    //  Sends message to client. Converts string to byte array, sends bytes to client.
     public void SendMessageToClient(string message)
     {
         byte[] commandResponseBytes = Encoding.ASCII.GetBytes(message);
-        Stream.Write(commandResponseBytes, 0, commandResponseBytes.Length);
+        _stream.Write(commandResponseBytes, 0, commandResponseBytes.Length);
     }
     
+    //  Return's Rooms dictionary
     public Dictionary<int, Room> GetRooms()
     {
         return _rooms;
     }
 
-    public Room? GetRoomFromRef(Room room)
+    //  Check if Room is in Room's with a reference.
+    public bool CheckRoomInRooms(Room room)
     {
-        var id = room.GetRoomId();
-        if (!_rooms.TryGetValue(id, out var foundRoom))
-        {
-            Console.WriteLine($"RemoteServer::GetRoomFromRef:: No room exists. Requested room: Room{id}");
-            return null;
-        }
-
-        return _rooms[id];
         
+        if (_rooms.ContainsValue(room)) return true;
+        
+        Console.WriteLine($"RemoteServer::GetRoomFromRef:: No room exists. Requested room: Room{room.GetRoomId()}");
+        return false;
+
     }
 
+    //  Get a reference to Room from Room's ID.
     public Room? GetRoomFromId(int roomId)
     {
+        if (_rooms.TryGetValue(roomId, out var room)) return room;
         
-        if (!_rooms.TryGetValue(roomId, out var room))
-        {
-            Console.WriteLine($"RemoteServer::GetRoomFromId:: No room exists. Requested room: Room{roomId}");
-            return null;
-        }
-
-        return _rooms[roomId];
+        Console.WriteLine($"RemoteServer::GetRoomFromId:: No room exists. Requested room: Room{roomId}");
+        return null;
     }
     
     //  Executes Commands on the server.
@@ -263,7 +262,8 @@ public class RemoteServer
         if (!_clients.ContainsKey(client) && commandByte != 1)
         {
             Console.WriteLine("Attempted to run command without being a valid Client...");
-            return _commands.ResponseType(MessageTypeSend.Error, "Attempted to run command without being a valid Client...");
+            return _commands.ResponseType(MessageTypeSend.Error, 
+                "Attempted to run command without being a valid Client...");
         }
         
         var route = (MessageTypeReceive)(commandByte);
@@ -293,15 +293,13 @@ public class RemoteServer
                 return _commands.JoinRoom(_clients[client], commandArgument);
             //  LeaveRoom = 08
             case MessageTypeReceive.LeaveRoom:
-                return "LeaveRoom";
-            //case MessageTypeReceive.UpdateRoom:
-                //return _rooms.UpdateCurrentPlayersInRoom();
+                return _commands.LeaveRoom(_clients[client], commandArgument);
+            case MessageTypeReceive.UpdateRoom:
+                return _commands.UpdateCurrentPlayersInRoom(_clients[client], commandArgument);
             default:
-                Console.WriteLine("Unknown command");
-                Console.WriteLine($"commandByte: {commandByte}");
-                Console.WriteLine($"commandArgument: {commandArgument}");
-                return _commands.ResponseType(MessageTypeSend.Error, "Unknown command");
-                
+                Console.WriteLine($"Unknown command. commandByte: {commandByte}. commandArgument: {commandArgument}");
+                return _commands.ResponseType(MessageTypeSend.Error,
+                    $"Unknown command. commandByte: {commandByte}. commandArgument: {commandArgument}");
         }
     }
     

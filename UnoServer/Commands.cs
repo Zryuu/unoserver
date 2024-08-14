@@ -127,6 +127,26 @@ public class Commands(RemoteServer server)
         return ResponseType(MessageTypeSend.LeaveRoom, $"Left Room{client.GetRoomId()}");
     }
     
+    public string UpdateCurrentPlayersInRoom(Client client, string command)
+    {
+        
+        var part = int.Parse(command);
+
+        //  Get Room from Rooms.
+        var room = server.GetRoomFromId(part);
+
+        //  Check if Room is null. If so, return with error message.
+        if (room == null)
+        {
+            return ResponseType(MessageTypeSend.Error, $"Room {part} doesn't exists. Aborting updating players.");
+        }
+        
+        //  Combine playerNames to one string with separator.
+        var playerNames = string.Join(";", room.CurrentPlayers.Select(player => player.GetXivName()));
+
+        return ResponseType(MessageTypeSend.UpdateRoom,$"{MessageTypeSend.UpdateRoom}{playerNames}");
+    }
+    
     public string RemoveClient(Client client)
     {
         server.RemoveClient(client.GetClient());
