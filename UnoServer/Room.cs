@@ -119,7 +119,7 @@ public class Room
         //  Using CurrentPlayers, send message telling everyone Whose in the room.
         foreach (var player in CurrentPlayers)
         {
-            //  msg format: commandByte, amount of players, player names[].
+            //  msg format: commandByte, amount of players, player names[]..
             _server.SendMessageToClient($"{MessageTypeSend.UpdateRoom}{playerNames}");
         }
     }
