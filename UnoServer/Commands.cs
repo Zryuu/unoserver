@@ -11,12 +11,12 @@ public class Commands(RemoteServer server)
         if (!server.GetClients().ContainsValue(client))
         {
             Console.WriteLine($"Ping received from non-current client: {client}. command: {command}");
-            return $"{99.ToString()}Ping rejected, not a current Client. Please reconnect to the server.";
+            return ResponseType(ResponseByte.Error, "Ping rejected, not a current Client. Please reconnect to the server.");
         }
         
         Console.WriteLine($"Ping received from {client.GetXivName()}");
         client.SetLastActive(DateTime.Now);
-        return 01.ToString();
+        return ResponseType(ResponseByte.Ping,$"Received Ping at {DateTime.Now}");
     }
 
     public string StartGame(TcpClient client, string command)
@@ -48,10 +48,8 @@ public class Commands(RemoteServer server)
         client.SetRoomId(part);
 
         //  Add thing to make check if Client was added to Room.
-        
-        var response = $"{06.ToString()}{part}";
-        
-        return response;
+
+        return ResponseType(ResponseByte.JoinRoom, $"{part}");
     }
     
     public string CreateRoom(Client client, string command)
@@ -72,10 +70,8 @@ public class Commands(RemoteServer server)
         
         room.SetHost(client);
         Console.WriteLine("Set Host");
-        
-        var response = $"{06.ToString()}{room.GetRoomId()}";
 
-        return response;
+        return ResponseType(ResponseByte.JoinRoom, $"{room.GetRoomId()}");
     }
     
     public string LeaveRoom(Client client, string command)
@@ -85,7 +81,7 @@ public class Commands(RemoteServer server)
         //  If Current Room is null, return
         if (client.GetCurrentRoom() == null)
         {
-            return $"{07.ToString()}";
+            return ResponseType(ResponseByte.LeaveRoom, $"Not currently in a room.");
         }
         
         //  If currentroom's ID doesnt equal given ID
@@ -103,7 +99,7 @@ public class Commands(RemoteServer server)
         server.GetRoomFromId(givenId)!.RemoveClientFromRoom(client);
         client.SetCurrentRoom(null!);
 
-        return $"{07.ToString()}";
+        return ResponseType(ResponseByte.LeaveRoom, $"Left Room{client.GetRoomId()}");
     }
     
     public string RemoveClient(Client client, string command)
@@ -112,8 +108,14 @@ public class Commands(RemoteServer server)
         server.RemoveClient(client.GetClient());
         Console.WriteLine($"Removed: {client.GetClient()} from client list. Client Disconnected...");
 
-        return "Server: Goodbye...";
+        return ResponseType(ResponseByte.Logout, $"Goodbye {client.GetXivName()}...");
     }
 
+
+    private string ResponseType(ResponseByte r, string message)
+    {
+        var response = $"{(int)r:D2}" + message;
+        return response;
+    }
     
 }

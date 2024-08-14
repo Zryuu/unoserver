@@ -17,6 +17,21 @@ internal enum CommandRoute
     LeaveRoom = 08
 }
 
+public enum ResponseByte
+{
+    Ping = 01,
+    Login = 02,
+    Logout = 03,
+    StartGame = 04,
+    EndGame = 05,
+    JoinRoom = 06,
+    LeaveRoom = 07,
+    UpdateRoom = 08,
+    Error = 99
+}
+
+
+
 public class RemoteServer
 {
     private readonly TcpListener _server;
