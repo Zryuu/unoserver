@@ -14,6 +14,7 @@ public class Room
     public Room(Client client, RemoteServer server, int maxPlayers)
     {
         _server = server;
+        MaxPlayers = 4;
         
         CreateRoomId();
         
@@ -148,7 +149,6 @@ public class Room
         
         CurrentPlayers.Add(client);
         OnOnClientConnected(client);
-        
         return 1;
     }
 

@@ -412,8 +412,15 @@ public class RemoteServer
         AddRoomToRooms(room);
         
         //  Rewrite this to be an if statement. If Room.AddClientToRoom returns true, SetCurrentRoom is run.
-        room.AddClientToRoom(client, room.GetRoomId());
-        Console.WriteLine($"{client.GetXivName()} joined Room{room.GetRoomId()}.");
+        if (room.AddClientToRoom(client, room.GetRoomId()) < 1)
+        {
+            Console.WriteLine("Didnt add client to room.");
+        }
+        else
+        {
+            Console.WriteLine($"{client.GetXivName()} joined Room{room.GetRoomId()}.");
+        }
+        
         
         room.SetHost(client);
         
