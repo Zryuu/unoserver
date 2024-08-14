@@ -49,6 +49,7 @@ public class Commands(RemoteServer server)
         }
         
         client.SetRoomId(part);
+        Console.WriteLine($"{client.GetXivName()} joined room: {part}");
 
         //  Add thing to make check if Client was added to Room.
 
