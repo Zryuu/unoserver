@@ -120,9 +120,7 @@ public class Room
         foreach (var player in CurrentPlayers)
         {
             //  msg format: commandByte, amount of players, player names[].
-            _server.SendMessageToClient($"{8.ToString()}{CurrentPlayers.Count}{playerNames}");
-            
-            return;
+            _server.SendMessageToClient($"{MessageTypeSend.UpdateRoom}{playerNames}");
         }
     }
 
