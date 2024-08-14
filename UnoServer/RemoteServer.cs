@@ -39,7 +39,7 @@ public class RemoteServer
 {
     private readonly TcpListener _server;
     private readonly bool _isRunning;
-    private const int AfkTimer = 30;
+    private const int AfkTimer = 300;
     private Dictionary<TcpClient, Client> _clients = new Dictionary<TcpClient, Client>();
     private Dictionary<Client, DateTime> _lastActiveTime = new Dictionary<Client, DateTime>();
     private Dictionary<int, Room> _rooms = new Dictionary<int, Room>();
@@ -310,20 +310,20 @@ public class RemoteServer
     }
     
      //  Checks if client is in clients. If not, add new client.
-    public string Login(TcpClient client, string command)
+    public string Login(TcpClient tcpClient, string command)
     {
-        if (_clients.ContainsKey(client))
+        if (_clients.ContainsKey(tcpClient))
         {
             Console.WriteLine($"{command} is already a client...");
             return ResponseType(MessageTypeSend.Login, $"Already connected to server.");
         }
 
-        var newClient = new Client(client, command, this);
-        newClient.SetClient(client);
+        var newClient = new Client(tcpClient, command, this);
+        newClient.SetClient(tcpClient);
         newClient.SetXivName(command);
         newClient.SetBInGame(false);
         newClient.SetLastActive(DateTime.Now);
-        _clients.Add(client, newClient);
+        _clients.Add(tcpClient, newClient);
         
         newClient.SetCurrentRoom(null);
         
