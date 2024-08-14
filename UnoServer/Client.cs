@@ -3,7 +3,7 @@ using System.Runtime.InteropServices.JavaScript;
 
 namespace UnoServer;
 
-public class Client(TcpClient client, string xivName, RemoteServer Server)
+public class Client(TcpClient client, string xivName, RemoteServer server)
 {
     private TcpClient TcpClient { get; set; } = client;
     private string XivName { get; set; } = xivName;
@@ -56,13 +56,13 @@ public class Client(TcpClient client, string xivName, RemoteServer Server)
     {
         if (CurrentRoom == null)
         {
-            if (!Server.GetRooms().ContainsKey(newValue))
+            if (!server.GetRooms().ContainsKey(newValue))
             {
                 Console.WriteLine("SetRoomId: No valid room to set ID.");
                 return;
             }
 
-            CurrentRoom = Server.GetRoomFromId(newValue);
+            CurrentRoom = server.GetRoomFromId(newValue);
             Console.WriteLine($"Set currentRoom's ID");
         }
         

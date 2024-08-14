@@ -39,7 +39,6 @@ public class RemoteServer
 {
     private readonly TcpListener _server;
     private readonly bool _isRunning;
-    private readonly Commands _commands;
     private const int AfkTimer = 30;
     private Dictionary<TcpClient, Client> _clients = new Dictionary<TcpClient, Client>();
     private Dictionary<Client, DateTime> _lastActiveTime = new Dictionary<Client, DateTime>();
@@ -53,7 +52,6 @@ public class RemoteServer
         _server = new TcpListener(IPAddress.Any, port);
         _server.Start();
         _isRunning = true;
-        _commands = new Commands(this);
         Console.WriteLine($"Server is running on port: {port}");
         
         var monitorThread = new Thread(MonitorClients)
@@ -93,7 +91,7 @@ public class RemoteServer
 
         //  Adds client to Server
         var response = ExecuteCommand(data, tcpClient);
-        SendMessageToClient(response);
+        SendMessageToClient(_stream, response);
 
         if (response.StartsWith("01"))
         {
@@ -107,7 +105,7 @@ public class RemoteServer
                 Console.WriteLine($"Received: {data} from {_clients[tcpClient].GetXivName()}");
                 _lastActiveTime[_clients[tcpClient]] = DateTime.Now;
                 string commandResponse = ExecuteCommand(data, tcpClient);
-                SendMessageToClient(commandResponse);
+                SendMessageToClient(_stream,commandResponse);
             
             }
         }
@@ -149,27 +147,6 @@ public class RemoteServer
         }
     }
 
-    //  Checks if client is in clients. If not, add new client.
-    private string AddNewClients(TcpClient client, string clientId)
-    {
-        if (_clients.ContainsKey(client))
-        {
-            Console.WriteLine($"{clientId} is already a client...");
-            return _commands.ResponseType(MessageTypeSend.Login, $"Already connected to server.");
-        }
-
-        var newClient = new Client(client, clientId, this);
-            newClient.SetClient(client);
-            newClient.SetXivName(clientId);
-            newClient.SetBInGame(false);
-            newClient.SetLastActive(DateTime.Now);
-        _clients.Add(client, newClient);
-        
-        newClient.SetCurrentRoom(null);
-        
-        return _commands.ResponseType(MessageTypeSend.Login, $"[UNO]: Successfully connected to Server. Welcome {newClient.GetXivName()}!");
-    }
-
     //  Adds new room to rooms list.
     public void AddRoomToRooms(Room room)
     {
@@ -202,7 +179,7 @@ public class RemoteServer
             
             _clients.Remove(c.Key);
             clientFound = true;
-            _commands.Logout(client, "Disconnected from Server...");
+            Logout(client, "Disconnected from Server...");
             _clients.Remove(client);
         }
         
@@ -215,10 +192,10 @@ public class RemoteServer
     }
 
     //  Sends message to client. Converts string to byte array, sends bytes to client.
-    public void SendMessageToClient(string message)
+    public void SendMessageToClient(NetworkStream stream, string message)
     {
-        byte[] commandResponseBytes = Encoding.ASCII.GetBytes(message);
-        _stream.Write(commandResponseBytes, 0, commandResponseBytes.Length);
+        var commandResponseBytes = Encoding.ASCII.GetBytes(message);
+        stream.Write(commandResponseBytes, 0, commandResponseBytes.Length);
     }
     
     //  Return's Rooms dictionary
@@ -247,6 +224,11 @@ public class RemoteServer
         return null;
     }
     
+    /***************************
+     *          Route          *
+     *         Commands        *
+     ***************************/
+    
     //  Executes Commands on the server.
     private string ExecuteCommand(string message, TcpClient client)
     {
@@ -262,7 +244,7 @@ public class RemoteServer
         if (!_clients.ContainsKey(client) && commandByte != 1)
         {
             Console.WriteLine("Attempted to run command without being a valid Client...");
-            return _commands.ResponseType(MessageTypeSend.Error, 
+            return ResponseType(MessageTypeSend.Error, 
                 "Attempted to run command without being a valid Client...");
         }
         
@@ -272,38 +254,231 @@ public class RemoteServer
         {
             //  Ping = 01
             case MessageTypeReceive.Ping:
-                return _commands.Ping(_clients[client], commandArgument);
+                return Ping(_clients[client], commandArgument);
             //  Login = 02,
             case MessageTypeReceive.Login:
-                return AddNewClients(client, commandArgument);
+                return Login(client, commandArgument);
             //  Logout = 03,
             case MessageTypeReceive.Logout:
-                return _commands.Logout(client, commandArgument);
+                return Logout(client, commandArgument);
             //  StartGame = 04,
             case MessageTypeReceive.StartGame:
-                return _commands.StartGame(client, commandArgument);
+                return StartGame(client, commandArgument);
             //  EndGame = 05,
             case MessageTypeReceive.EndGame:
-                return "EndGame";
+                return EndGame(client, commandArgument);
             //  CreateRoom = 06,
             case MessageTypeReceive.CreateRoom:
-                return _commands.CreateRoom(_clients[client], commandArgument);
+                return CreateRoom(_clients[client], commandArgument);
             //  JoinRoom = 07,
             case MessageTypeReceive.JoinRoom:
-                return _commands.JoinRoom(_clients[client], commandArgument);
+                return JoinRoom(_clients[client], commandArgument);
             //  LeaveRoom = 08
             case MessageTypeReceive.LeaveRoom:
-                return _commands.LeaveRoom(_clients[client], commandArgument);
+                return LeaveRoom(_clients[client], commandArgument);
             case MessageTypeReceive.UpdateRoom:
-                return _commands.UpdateCurrentPlayersInRoom(_clients[client], commandArgument);
+                return UpdateCurrentPlayersInRoom(_clients[client], commandArgument);
             default:
                 Console.WriteLine($"Unknown command. commandByte: {commandByte}. commandArgument: {commandArgument}");
-                return _commands.ResponseType(MessageTypeSend.Error,
+                return ResponseType(MessageTypeSend.Error,
                     $"Unknown command. commandByte: {commandByte}. commandArgument: {commandArgument}");
         }
     }
     
 
+    /***************************
+     *         Commands        *
+     ***************************/
+    
+     public string Ping(Client client, string command)
+    {
+        if (!GetClients().ContainsValue(client))
+        {
+            Console.WriteLine($"Ping received from non-current client: {client}. command: {command}");
+            return ResponseType(MessageTypeSend.Error, "Ping rejected, not a current Client. Please reconnect to the server.");
+        }
+
+        if (command != client.GetXivName())
+        {
+            Console.WriteLine($"Ping received from {client.GetXivName()} but name sent was {command}...Removing");
+            RemoveClient(client);
+        }
+        
+        Console.WriteLine($"Ping received from {client.GetXivName()}");
+        client.SetLastActive(DateTime.Now);
+        return ResponseType(MessageTypeSend.Ping,$"Received Ping at {DateTime.Now}");
+    }
+    
+     //  Checks if client is in clients. If not, add new client.
+    public string Login(TcpClient client, string command)
+    {
+        if (_clients.ContainsKey(client))
+        {
+            Console.WriteLine($"{command} is already a client...");
+            return ResponseType(MessageTypeSend.Login, $"Already connected to server.");
+        }
+
+        var newClient = new Client(client, command, this);
+        newClient.SetClient(client);
+        newClient.SetXivName(command);
+        newClient.SetBInGame(false);
+        newClient.SetLastActive(DateTime.Now);
+        _clients.Add(client, newClient);
+        
+        newClient.SetCurrentRoom(null);
+        
+        return ResponseType(MessageTypeSend.Login, $"[UNO]: Successfully connected to Server. Welcome {newClient.GetXivName()}!");
+    }
+    
+    public string Logout(TcpClient client, string command)
+    {
+        if (!GetClients().ContainsKey(client))
+        {
+            Console.WriteLine("Failed to disconnect a clint...");
+            return ResponseType(MessageTypeSend.Error, $"Failed to disconnect");    //This prob wont ever be ran.....
+        }
+        
+        InactiveClients.Add(GetClient(client)!);
+        return ResponseType(MessageTypeSend.Logout, $"Disconnected from Server...Goodbye...");
+    }
+
+    public string StartGame(TcpClient client, string command)
+    {
+        return "StartGame was entered";
+    }
+    
+    public string EndGame(TcpClient client, string command)
+    {
+        return "EndGame was entered";
+    }
+    
+    public string JoinRoom(Client client, string command)
+    {
+        //  int cast the command.
+        var part = int.Parse(command);
+        
+        //  Get client's current room ID. If no room, returns null.
+        var id = client.GetRoomId();
+        
+        //  If Client's RoomID is null
+        if (id != null)
+        {
+            //  Client's OldRoom.
+            var oldRoom = GetRoomFromId((int)id);
+
+            //  Leave Room server side
+            oldRoom!.RemoveClientFromRoom(client);
+            
+            //  Leave Room client side
+            client.SetCurrentRoom(null);
+            SendMessageToClient(client.GetClient().GetStream()
+                ,ResponseType(MessageTypeSend.LeaveRoom, $"{id}"));
+        }
+        
+        //  Checks if given Room exists in Rooms.
+        if (GetRoomFromId(part) == null)
+        {
+            return ResponseType(MessageTypeSend.Error, $"Room: {part}. Doesn't exist...");
+        }
+        
+        //  Add's client to room server side.
+        Console.WriteLine($"{client.GetXivName()} joined room: {part}");
+        client.SetRoomId(part);
+
+        //  Add thing to make check if Client was added to Room.
+
+        //  Client's new room.
+        var newRoom = GetRoomFromId(part);
+
+        if (!newRoom!.CheckPlayerPresent(client))
+        {
+            newRoom.AddClientToRoom(client, part);
+        }
+        
+        //  Tells client it joined room.
+        return ResponseType(MessageTypeSend.JoinRoom, $"{part}");
+    }
+    
+    public string CreateRoom(Client client, string command)
+    {
+        var part = int.Parse(command);
+        
+        Room room = new Room(client, this, part);
+        
+        //  Logic to parse message to set MaxPlayers.
+        
+        AddRoomToRooms(room);
+        
+        //  Rewrite this to be an if statement. If Room.AddClientToRoom returns true, SetCurrentRoom is run.
+        room.AddClientToRoom(client, room.GetRoomId());
+        Console.WriteLine($"{client.GetXivName()} joined Room{room.GetRoomId()}.");
+        
+        room.SetHost(client);
+        
+        return ResponseType(MessageTypeSend.JoinRoom, $"{room.GetRoomId()}");
+    }
+    
+    //  Removes client from Room.
+    public string LeaveRoom(Client client, string command)
+    {
+        var givenId = int.Parse(command);
+
+        //  If Current Room is null, return
+        if (client.GetCurrentRoom() == null)
+        {
+            return ResponseType(MessageTypeSend.LeaveRoom, $"Not currently in a room.");
+        }
+        
+        //  If currentroom's ID doesnt equal given ID
+        if (client.GetRoomId() != givenId)
+        {
+            if (GetRooms().ContainsKey((int)client.GetRoomId()!) == false)
+            {
+                client.SetCurrentRoom(null!);
+            }
+            
+            GetRoomFromId((int)client.GetRoomId()!)!.RemoveClientFromRoom(client);
+            client.SetCurrentRoom(null!);
+        }
+
+        GetRoomFromId(givenId)!.RemoveClientFromRoom(client);
+        client.SetCurrentRoom(null!);
+
+        return ResponseType(MessageTypeSend.LeaveRoom, $"Left Room{client.GetRoomId()}");
+    }
+    
+    public string UpdateCurrentPlayersInRoom(Client client, string command)
+    {
+        
+        var parts = command.Split("|");
+        
+        var part = int.Parse(parts[0]);
+        var playerNames = parts[1];
+        
+        //  Get Room from Rooms.
+        var room = GetRoomFromId(part);
+
+        //  Check if Room is null. If so, return with error message.
+        return room == null 
+            ? ResponseType(MessageTypeSend.Error,$"Room {part} doesn't exists. Aborting updating players.") 
+            : ResponseType(MessageTypeSend.UpdateRoom,$"{MessageTypeSend.UpdateRoom}{playerNames}");
+    }
+    
+    public string RemoveClient(Client client)
+    {
+        RemoveClient(client.GetClient());
+        Console.WriteLine($"Removed: {client.GetClient()} from client list. Client Disconnected...");
+
+        return ResponseType(MessageTypeSend.Logout, $"Goodbye {client.GetXivName()}...");
+    }
+    
+    public string ResponseType(MessageTypeSend r, string message)
+    {
+        var response = $"{(int)r:D2}" + message;
+        return response;
+    }
+    
+    
     
     public static void Main(string[] args)
     {

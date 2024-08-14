@@ -23,6 +23,8 @@ public class Room
         
         Console.WriteLine($"Room{RoomId} created by {client.GetXivName()}");
 
+        OnClientConnected += UpdateClients;
+
     }
     
     public int GetRoomId()
@@ -103,9 +105,6 @@ public class Room
         return CurrentPlayers;
     }
     
-    //  This prob doesn't need a return statement...
-    
-
     public bool RemoveHost()
     {
         var hostClient = _server.GetClient(Host.GetClient());
@@ -172,7 +171,25 @@ public class Room
             return true;
         }
         
+        OnOnClientConnected(client);
         return true;
+    }
+
+    //  Delegate func. Called anytime a player joins or leaves room.
+    private void UpdateClients(Client client)
+    {
+        //  Combine playerNames to one string with separator.
+        var playerNames = string.Join(";", CurrentPlayers.Select(player => player.GetXivName()));
+
+        //  Using | as the separator
+        var command = RoomId + "|" + playerNames;
+
+        //  Sends the message to all players in room.
+        foreach (var player in CurrentPlayers)
+        {
+            _server.SendMessageToClient(player.GetClient().GetStream(),
+                _server.UpdateCurrentPlayersInRoom(client, command));
+        }
     }
     
     public Client GetHost()
