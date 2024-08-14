@@ -16,6 +16,8 @@ public class Room
         _server = server;
         MaxPlayers = 4;
         
+        Console.WriteLine(maxPlayers);
+        
         CreateRoomId();
         
         SetMaxPlayers(maxPlayers);
@@ -129,12 +131,14 @@ public class Room
     
     public int AddClientToRoom(Client client, int givenId)
     {
+        //  Checks if the roomID given matches this room instance's ID.
         if (givenId != RoomId)
         {
             Console.WriteLine($"{client.GetXivName()} attempted to join Room{givenId} but instead tried to join Room{RoomId}.");
             return 0;
         }
 
+        //  Checks if Room is full
         if (CurrentPlayers.Count >= MaxPlayers)
         {
 
@@ -147,6 +151,7 @@ public class Room
             return -1;
         }
         
+        //  Adds client.
         CurrentPlayers.Add(client);
         OnOnClientConnected(client);
         return 1;
