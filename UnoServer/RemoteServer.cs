@@ -203,7 +203,8 @@ public class RemoteServer
         
         if (!clientFound)
         {
-            Console.WriteLine($"RemoteServer::RemoveClient: No Client could be found...Requested client: {_clients[client].GetXivName()}");
+            Console.WriteLine($"RemoteServer::RemoveClient: No Client could be found...Requested client...closing stream");
+            client.Close();
         }
     }
 
