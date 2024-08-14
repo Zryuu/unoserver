@@ -61,6 +61,7 @@ public class Commands(RemoteServer server)
         
         Room room = new Room(client, server, part);
         
+        Console.WriteLine("Room made.");
         //  Logic to parse message to set MaxPlayers.
         
         server.AddRoomToRooms(room);
@@ -73,6 +74,7 @@ public class Commands(RemoteServer server)
         room.SetHost(client);
         Console.WriteLine("Set Host");
 
+        Console.WriteLine("It did make it to here...");
         return ResponseType(ResponseByte.JoinRoom, $"{room.GetRoomId()}");
     }
     
