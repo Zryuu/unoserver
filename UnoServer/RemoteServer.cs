@@ -139,10 +139,8 @@ public class RemoteServer
 
             foreach (var client in inactiveClients)
             {
-                client.GetClient().Close();
                 Console.WriteLine($"removing inactive client with ID: {_clients[client.GetClient()].GetXivName()}");
                 RemoveClient(client.GetClient());
-                _clients.Remove(client.GetClient());
             }
         }
     }
@@ -153,6 +151,7 @@ public class RemoteServer
         if (_clients.ContainsKey(client))
         {
             Console.WriteLine($"{clientId} is already a client...");
+            return _commands.ResponseType(ResponseByte.Login, $"Already connected to server.");
         }
 
         var newClient = new Client(client, clientId, this);
@@ -199,8 +198,10 @@ public class RemoteServer
             
             _clients.Remove(c.Key);
             clientFound = true;
+            client.Close();
         }
         
+        //  This should never be ran....if this is ran then shit is fucked.
         if (!clientFound)
         {
             Console.WriteLine($"RemoteServer::RemoveClient: No Client could be found...Requested client...closing stream");
