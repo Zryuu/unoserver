@@ -155,7 +155,7 @@ public class RemoteServer
         }
 
         var newClient = new Client(client, clientId, this);
-            newClient.SetClient(_clients[client].GetClient());
+            newClient.SetClient(client);
             newClient.SetXivName(clientId);
             newClient.SetBInGame(false);
             newClient.SetLastActive(DateTime.Now);
