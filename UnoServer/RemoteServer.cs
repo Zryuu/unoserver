@@ -200,7 +200,8 @@ public class RemoteServer
             
             _clients.Remove(c.Key);
             clientFound = true;
-            client.Close();
+            _commands.Logout(client, "Disconnected from Server...");
+            _clients.Remove(client);
         }
         
         //  This should never be ran....if this is ran then shit is fucked.

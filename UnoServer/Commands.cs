@@ -24,6 +24,22 @@ public class Commands(RemoteServer server)
         client.SetLastActive(DateTime.Now);
         return ResponseType(MessageTypeSend.Ping,$"Received Ping at {DateTime.Now}");
     }
+    
+    public string Login(TcpClient client, string command)
+    {
+        return "StartGame was entered";
+    }
+    
+    public string Logout(TcpClient client, string command)
+    {
+        if (!server.GetClients().ContainsKey(client))
+        {
+            Console.WriteLine("Failed to disconnect a clint...");
+            return "";
+        }
+        
+        return ResponseType(MessageTypeSend.Logout, $"{command}");
+    }
 
     public string StartGame(TcpClient client, string command)
     {
