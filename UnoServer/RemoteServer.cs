@@ -165,7 +165,7 @@ public class RemoteServer
         
         newClient.SetCurrentRoom(null);
         
-        return _commands.ResponseType(MessageTypeSend.Login, $"UNO: Successfully connected to Server. Welcome {newClient.GetXivName()}!");
+        return _commands.ResponseType(MessageTypeSend.Login, $"[UNO]: Successfully connected to Server. Welcome {newClient.GetXivName()}!");
     }
 
     public void AddRoomToRooms(Room room)
