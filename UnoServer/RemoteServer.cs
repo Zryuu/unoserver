@@ -415,6 +415,8 @@ public class RemoteServer
         if (room.AddClientToRoom(client, room.GetRoomId()) < 1)
         {
             Console.WriteLine("Didnt add client to room.");
+            
+            
         }
         else
         {

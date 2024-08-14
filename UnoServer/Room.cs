@@ -143,7 +143,7 @@ public class Room
                 Console.WriteLine($"Player{i}: {CurrentPlayers[i].GetXivName()}");
             }
             
-            Console.WriteLine($"{client.GetXivName()} attempted to join Room{givenId} but room is full.");
+            Console.WriteLine($"Room: {client.GetXivName()} attempted to join Room{givenId} but room is full.");
             return -1;
         }
         
