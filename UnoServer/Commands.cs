@@ -112,7 +112,7 @@ public class Commands(RemoteServer server)
     }
 
 
-    private string ResponseType(ResponseByte r, string message)
+    public string ResponseType(ResponseByte r, string message)
     {
         var response = $"{(int)r:D2}" + message;
         return response;

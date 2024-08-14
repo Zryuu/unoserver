@@ -257,7 +257,7 @@ public class RemoteServer
         if (!_clients.ContainsKey(client) && commandByte != 1)
         {
             Console.WriteLine("Attempted to run command without being a valid Client...");
-            return "Attempted to run command without being a valid Client...";
+            return _commands.ResponseType(ResponseByte.Error, "Attempted to run command without being a valid Client...");
         }
         
         var route = (CommandRoute)(commandByte);
@@ -292,7 +292,7 @@ public class RemoteServer
                 Console.WriteLine("Unknown command");
                 Console.WriteLine($"commandByte: {commandByte}");
                 Console.WriteLine($"commandArgument: {commandArgument}");
-                return "Unknown command";
+                return _commands.ResponseType(ResponseByte.Error, "Unknown command");
                 
         }
     }
