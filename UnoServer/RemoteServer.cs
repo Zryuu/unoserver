@@ -7,14 +7,14 @@ namespace UnoServer;
 
 internal enum CommandRoute
 {
-    Ping = 0,
-    Login = 1,
-    Logout = 2,
-    StartGame = 3,
-    EndGame = 4,
-    CreateRoom = 5,
-    JoinRoom = 6,
-    LeaveRoom = 7
+    Ping = 01,
+    Login = 02,
+    Logout = 03,
+    StartGame = 04,
+    EndGame = 05,
+    CreateRoom = 06,
+    JoinRoom = 07,
+    LeaveRoom = 08
 }
 
 public class RemoteServer
@@ -74,7 +74,7 @@ public class RemoteServer
         var response = ExecuteCommand(data, tcpClient);
         SendMessageToClient(response);
 
-        if (response.StartsWith("UNO: Successfully connected to Server. Welcome "))
+        if (response.StartsWith("01"))
         {
             Client client = _clients[tcpClient];
             client.SetLastActive(DateTime.Now);
@@ -148,7 +148,7 @@ public class RemoteServer
         
         newClient.SetCurrentRoom(null);
         
-        return $"UNO: Successfully connected to Server. Welcome {newClient.GetXivName()}!";
+        return $"{01.ToString()}UNO: Successfully connected to Server. Welcome {newClient.GetXivName()}!";
     }
 
     public void AddRoomToRooms(Room room)
@@ -236,8 +236,8 @@ public class RemoteServer
             return "Invalid command format.";
         }
         
-        var commandByte = int.Parse(message[0].ToString());
-        var commandArgument = message[1..];
+        var commandByte = int.Parse(message.Substring(0, 2));
+        var commandArgument = message[2..];
         
         if (!_clients.ContainsKey(client) && commandByte != 1)
         {
@@ -249,28 +249,28 @@ public class RemoteServer
         
         switch (route)
         {
-            //  Ping = 0
+            //  Ping = 01
             case CommandRoute.Ping:
                 return _commands.Ping(_clients[client], commandArgument);
-            //  Login = 1,
+            //  Login = 02,
             case CommandRoute.Login:
                 return AddNewClients(client, commandArgument);
-            //  Logout = 2,
+            //  Logout = 03,
             case CommandRoute.Logout:
                 return _commands.RemoveClient(_clients[client], commandArgument);
-            //  StartGame = 3,
+            //  StartGame = 04,
             case CommandRoute.StartGame:
                 return _commands.StartGame(client, commandArgument);
-            //  EndGame = 4,
+            //  EndGame = 05,
             case CommandRoute.EndGame:
                 return "EndGame";
-            //  CreateRoom = 5,
+            //  CreateRoom = 06,
             case CommandRoute.CreateRoom:
                 return _commands.CreateRoom(_clients[client], commandArgument);
-            //  JoinRoom = 6,
+            //  JoinRoom = 07,
             case CommandRoute.JoinRoom:
                 return _commands.JoinRoom(_clients[client], commandArgument);
-            //  LeaveRoom = 7
+            //  LeaveRoom = 08
             case CommandRoute.LeaveRoom:
                 return "LeaveRoom";
             default:

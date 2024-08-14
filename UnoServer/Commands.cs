@@ -11,12 +11,12 @@ public class Commands(RemoteServer server)
         if (!server.GetClients().ContainsValue(client))
         {
             Console.WriteLine($"Ping received from non-current client: {client}. command: {command}");
-            return 0.ToString();
+            return $"{99.ToString()}Ping rejected, not a current Client. Please reconnect to the server.";
         }
         
         Console.WriteLine($"Ping received from {client.GetXivName()}");
         client.SetLastActive(DateTime.Now);
-        return 1.ToString();
+        return 01.ToString();
     }
 
     public string StartGame(TcpClient client, string command)
@@ -49,7 +49,7 @@ public class Commands(RemoteServer server)
 
         //  Add thing to make check if Client was added to Room.
         
-        var response = $"{1.ToString()}{part}";
+        var response = $"{06.ToString()}{part}";
         
         return response;
     }
@@ -73,7 +73,7 @@ public class Commands(RemoteServer server)
         room.SetHost(client);
         Console.WriteLine("Set Host");
         
-        var response = $"{1.ToString()}{room.GetRoomId()}";
+        var response = $"{06.ToString()}{room.GetRoomId()}";
 
         return response;
     }
@@ -85,7 +85,7 @@ public class Commands(RemoteServer server)
         //  If Current Room is null, return
         if (client.GetCurrentRoom() == null)
         {
-            return $"{0.ToString()}";
+            return $"{07.ToString()}";
         }
         
         //  If currentroom's ID doesnt equal given ID
@@ -103,7 +103,7 @@ public class Commands(RemoteServer server)
         server.GetRoomFromId(givenId)!.RemoveClientFromRoom(client);
         client.SetCurrentRoom(null!);
 
-        return $"{1.ToString()}";
+        return $"{07.ToString()}";
     }
     
     public string RemoveClient(Client client, string command)
