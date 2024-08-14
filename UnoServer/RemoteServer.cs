@@ -475,7 +475,7 @@ public class RemoteServer
         //  Check if Room is null. If so, return with error message.
         return room == null 
             ? ResponseType(MessageTypeSend.Error,$"Room {part} doesn't exists. Aborting updating players.") 
-            : ResponseType(MessageTypeSend.UpdateRoom,$"{MessageTypeSend.UpdateRoom}{playerNames}");
+            : ResponseType(MessageTypeSend.UpdateRoom,$"{playerNames}");
     }
     
     public string RemoveClient(Client client)
