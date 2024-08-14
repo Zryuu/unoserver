@@ -80,7 +80,7 @@ public class Room
         //  Checks if room is in Rooms.
         if (!_server.GetRooms().ContainsValue(this)) return;
         
-        var currentRoom = _server.GetRoomfromRef(this);
+        var currentRoom = _server.GetRoomFromRef(this);
 
         if (currentRoom == null)
         {

@@ -217,12 +217,12 @@ public class RemoteServer
         return _rooms;
     }
 
-    public Room? GetRoomfromRef(Room room)
+    public Room? GetRoomFromRef(Room room)
     {
         var id = room.GetRoomId();
         if (!_rooms.TryGetValue(id, out var foundRoom))
         {
-            Console.WriteLine($"No room exists. Requested room: Room{id}");
+            Console.WriteLine($"RemoteServer::GetRoomFromRef:: No room exists. Requested room: Room{id}");
             return null;
         }
 
@@ -235,7 +235,7 @@ public class RemoteServer
         
         if (!_rooms.TryGetValue(roomId, out var room))
         {
-            Console.WriteLine($"No room exists. Requested room: Room{roomId}");
+            Console.WriteLine($"RemoteServer::GetRoomFromId:: No room exists. Requested room: Room{roomId}");
             return null;
         }
 
