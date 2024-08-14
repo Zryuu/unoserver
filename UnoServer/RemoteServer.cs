@@ -43,6 +43,7 @@ public class RemoteServer
     private Dictionary<TcpClient, Client> _clients = new Dictionary<TcpClient, Client>();
     private Dictionary<Client, DateTime> _lastActiveTime = new Dictionary<Client, DateTime>();
     private Dictionary<int, Room> _rooms = new Dictionary<int, Room>();
+    public List<Client> InactiveClients = new List<Client>();
 
     public NetworkStream Stream;
 
@@ -128,18 +129,16 @@ public class RemoteServer
             //  Sleep for 5mins.
             Thread.Sleep(AfkTimer * 1000);
             var now = DateTime.Now;
-
-            var inactiveClients = new List<Client>();
             
             foreach (var client in _lastActiveTime)
             {
                 if ((now - client.Value).TotalSeconds > AfkTimer)
                 {
-                    inactiveClients.Add(client.Key);
+                    InactiveClients.Add(client.Key);
                 }
             }
 
-            foreach (var client in inactiveClients)
+            foreach (var client in InactiveClients)
             {
                 Console.WriteLine($"removing inactive client with ID: {_clients[client.GetClient()].GetXivName()}");
                 RemoveClient(client.GetClient());
@@ -278,7 +277,7 @@ public class RemoteServer
                 return AddNewClients(client, commandArgument);
             //  Logout = 03,
             case MessageTypeReceive.Logout:
-                return _commands.RemoveClient(_clients[client]);
+                return _commands.Logout(client, commandArgument);
             //  StartGame = 04,
             case MessageTypeReceive.StartGame:
                 return _commands.StartGame(client, commandArgument);

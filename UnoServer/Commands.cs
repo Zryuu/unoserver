@@ -35,10 +35,11 @@ public class Commands(RemoteServer server)
         if (!server.GetClients().ContainsKey(client))
         {
             Console.WriteLine("Failed to disconnect a clint...");
-            return "";
+            return ResponseType(MessageTypeSend.Error, $"Failed to disconnect");    //This prob wont ever be ran.....
         }
         
-        return ResponseType(MessageTypeSend.Logout, $"{command}");
+        server.InactiveClients.Add(server.GetClient(client)!);
+        return ResponseType(MessageTypeSend.Logout, $"Disconnected from Server...Goodbye...");
     }
 
     public string StartGame(TcpClient client, string command)
