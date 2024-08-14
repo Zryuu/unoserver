@@ -63,20 +63,16 @@ public class Commands(RemoteServer server)
         
         Room room = new Room(client, server, part);
         
-        Console.WriteLine("Room made.");
         //  Logic to parse message to set MaxPlayers.
         
         server.AddRoomToRooms(room);
-        Console.WriteLine("Added Room to Rooms");
         
         //  Rewrite this to be an if statement. If Room.AddClientToRoom returns true, SetCurrentRoom is run.
         room.AddClientToRoom(client, room.GetRoomId());
         Console.WriteLine($"{client.GetXivName()} joined Room{room.GetRoomId()}.");
         
         room.SetHost(client);
-        Console.WriteLine("Set Host");
-
-        Console.WriteLine("It did make it to here...");
+        
         return ResponseType(ResponseByte.JoinRoom, $"{room.GetRoomId()}");
     }
     
@@ -110,7 +106,6 @@ public class Commands(RemoteServer server)
     
     public string RemoveClient(Client client, string command)
     {
-        client.GetClient().Close();
         server.RemoveClient(client.GetClient());
         Console.WriteLine($"Removed: {client.GetClient()} from client list. Client Disconnected...");
 

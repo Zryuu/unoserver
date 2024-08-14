@@ -139,6 +139,7 @@ public class RemoteServer
 
             foreach (var client in inactiveClients)
             {
+                client.GetClient().Close();
                 Console.WriteLine($"removing inactive client with ID: {_clients[client.GetClient()].GetXivName()}");
                 _clients.Remove(client.GetClient());
                 RemoveClient(client.GetClient());
