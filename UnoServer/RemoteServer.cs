@@ -7,26 +7,26 @@ namespace UnoServer;
 
 internal enum CommandRoute
 {
-    Ping = 01,
-    Login = 02,
-    Logout = 03,
-    StartGame = 04,
-    EndGame = 05,
-    CreateRoom = 06,
-    JoinRoom = 07,
-    LeaveRoom = 08
+    Ping = 00,
+    Login = 01,
+    Logout = 02,
+    StartGame = 03,
+    EndGame = 04,
+    CreateRoom = 05,
+    JoinRoom = 06,
+    LeaveRoom = 07
 }
 
 public enum ResponseByte
 {
-    Ping = 01,
-    Login = 02,
-    Logout = 03,
-    StartGame = 04,
-    EndGame = 05,
-    JoinRoom = 06,
-    LeaveRoom = 07,
-    UpdateRoom = 08,
+    Ping = 00,
+    Login = 01,
+    Logout = 02,
+    StartGame = 03,
+    EndGame = 04,
+    JoinRoom = 05,
+    LeaveRoom = 06,
+    UpdateRoom = 07,
     Error = 99
 }
 
