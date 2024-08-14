@@ -61,8 +61,13 @@ public class Client(TcpClient client, string xivName, RemoteServer Server)
     {
         if (CurrentRoom == null)
         {
-            Console.WriteLine("No valid room to set ID.");
-            return;
+            if (!Server.GetRooms().ContainsKey(newValue))
+            {
+                Console.WriteLine("SetRoomId: No valid room to set ID.");
+                return;
+            }
+
+            CurrentRoom = Server.GetRoomFromId(newValue);
         }
         
         CurrentRoom!.SetRoomId(newValue);

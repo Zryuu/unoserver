@@ -34,16 +34,19 @@ public class Commands(RemoteServer server)
 
         if (client.GetRoomId() != null)
         {
-            //  Lease Room
+            //  Leave Room
+            client.SetCurrentRoom(null);
+            server.SendMessageToClient(ResponseType(ResponseByte.LeaveRoom, ""));
         }
 
-        if (!int.TryParse(command, out var part))
-        {
-            part = Convert.ToInt32(command);
-        }
-         
+        var part = int.Parse(command);
         
         //  Check if Room exists 
+
+        if (server.GetRoomFromId(part) == null)
+        {
+            return ResponseType(ResponseByte.Error, $"Room: {part}. Doesn't exist...");
+        }
         
         client.SetRoomId(part);
 
@@ -57,7 +60,6 @@ public class Commands(RemoteServer server)
         var part = int.Parse(command);
         
         Room room = new Room(client, server, part);
-        
         
         //  Logic to parse message to set MaxPlayers.
         
