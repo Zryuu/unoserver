@@ -48,11 +48,9 @@ public class Room
         {
             if (_server.GetRoomFromId(rand) != null)
             {
-                Console.WriteLine("Room already exists. ReRolling ID");
+                Console.WriteLine($"Room {rand} already exists. ReRolling ID");
                 continue;
             }
-
-            Console.WriteLine($"Room Id succ, ID: {rand}");
             break;
         }
         

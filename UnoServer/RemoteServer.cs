@@ -378,7 +378,7 @@ public class RemoteServer
             //  Leave Room client side
             client.SetCurrentRoom(null);
             SendMessageToClient(client.GetClient().GetStream()
-                ,ResponseType(MessageTypeSend.LeaveRoom, $"{id}"));
+                ,ResponseType(MessageTypeSend.JoinRoom, $"{id}"));
         }
         
         //  Checks if given Room exists in Rooms.
@@ -446,10 +446,10 @@ public class RemoteServer
         //  If Current Room is null, return
         if (client.GetCurrentRoom() == null)
         {
-            return ResponseType(MessageTypeSend.LeaveRoom, $"Not currently in a room.");
+            return ResponseType(MessageTypeSend.Error, $"Not currently in a room.");
         }
         
-        //  If currentroom's ID doesnt equal given ID
+        //  If current room's ID doesnt equal given ID
         if (client.GetRoomId() != givenId)
         {
             if (GetRooms().ContainsKey((int)client.GetRoomId()!) == false)
@@ -464,7 +464,7 @@ public class RemoteServer
         GetRoomFromId(givenId)!.RemoveClientFromRoom(client);
         client.SetCurrentRoom(null!);
 
-        return ResponseType(MessageTypeSend.LeaveRoom, $"Left Room{client.GetRoomId()}");
+        return ResponseType(MessageTypeSend.LeaveRoom, $"Left Room {client.GetRoomId()}");
     }
     
     public string UpdateCurrentPlayersInRoom(Client client, string command)
