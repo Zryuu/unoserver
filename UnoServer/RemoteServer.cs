@@ -426,21 +426,14 @@ public class RemoteServer
         if (room.AddClientToRoom(client, room.GetRoomId()) < 1)
         {
             Console.WriteLine("Didnt add client to room.");
-            
-            
         }
         else
         {
             Console.WriteLine($"{client.GetXivName()} joined Room{room.GetRoomId()}.");
         }
         
-        
         room.SetHost(client);
-        
-        //  This needs to be a macro
-        var playerNames = string.Join(";", room.CurrentPlayers.Select(player => player.GetXivName()));
-        
-        return ResponseType(MessageTypeSend.JoinRoom, $"{room.GetRoomId()}");
+        return ResponseType(MessageTypeSend.JoinRoom, $"{room.GetRoomId()};{room.GetHost().GetXivName()}");
     }
     
     //  Removes client from Room.
