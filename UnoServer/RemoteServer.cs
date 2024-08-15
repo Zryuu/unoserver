@@ -16,7 +16,8 @@ internal enum MessageTypeReceive
     CreateRoom,
     JoinRoom,
     LeaveRoom,
-    UpdateRoom
+    UpdateRoom,
+    RoomSettings
 }
 
 //  CommandBytes sent to Server
@@ -30,6 +31,7 @@ public enum MessageTypeSend
     JoinRoom,
     LeaveRoom,
     UpdateRoom,
+    RoomSettings,
     Error = 99
 }
 
@@ -276,8 +278,12 @@ public class RemoteServer
             //  LeaveRoom = 08
             case MessageTypeReceive.LeaveRoom:
                 return LeaveRoom(_clients[client], commandArgument);
+            //  LeaveRoom = 09
             case MessageTypeReceive.UpdateRoom:
                 return UpdateCurrentPlayersInRoom(_clients[client], commandArgument);
+            //  LeaveRoom = 10
+            case MessageTypeReceive.RoomSettings:
+                return RoomSettings(_clients[client], commandArgument);
             default:
                 Console.WriteLine($"Unknown command. commandByte: {commandByte}. commandArgument: {commandArgument}");
                 return ResponseType(MessageTypeSend.Error,
@@ -476,6 +482,15 @@ public class RemoteServer
         return room == null 
             ? ResponseType(MessageTypeSend.Error,$"Room {part} doesn't exists. Aborting updating players.") 
             : ResponseType(MessageTypeSend.UpdateRoom,$"{playerNames}");
+    }
+
+    public string RoomSettings(Client client, string command)
+    {
+       // var
+
+
+        //return ResponseType(MessageTypeSend.RoomSettings,);
+        return "yes";
     }
     
     public string RemoveClient(Client client)
