@@ -144,6 +144,8 @@ public class RemoteServer
             foreach (var client in InactiveClients)
             {
                 Console.WriteLine($"removing inactive client with ID: {_clients[client.GetClient()].GetXivName()}");
+                Logout(client.GetClient(), ResponseType(MessageTypeSend.Logout, 
+                    $"Disconnecting from server due to inactivity."));
                 RemoveClient(client.GetClient());
             }
         }
@@ -175,14 +177,11 @@ public class RemoteServer
     public void RemoveClient(TcpClient client)
     {
         var clientFound = false;
-        foreach (var c in _clients)
+        foreach (var c in _clients.Where(c => c.Key == client))
         {
-            if (c.Key != client) { continue; }
-            
-            _clients.Remove(c.Key);
             clientFound = true;
-            Logout(client, "Disconnected from Server...");
-            _clients.Remove(client);
+            Logout(c.Key, "Disconnected from Server...");
+            _clients.Remove(c.Key);
         }
         
         //  This should never be ran....if this is ran then shit is fucked.
@@ -194,8 +193,14 @@ public class RemoteServer
     }
 
     //  Sends message to client. Converts string to byte array, sends bytes to client.
-    public void SendMessageToClient(NetworkStream stream, string message)
+    public void SendMessageToClient(NetworkStream? stream, string message)
     {
+        if (stream == null)
+        {
+            Console.WriteLine($"Stream closed, cant send message. Message: {message}");
+            return;
+        }
+        
         var commandResponseBytes = Encoding.ASCII.GetBytes(message);
         stream.Write(commandResponseBytes, 0, commandResponseBytes.Length);
     }
