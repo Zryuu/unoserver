@@ -12,13 +12,15 @@ public class Room
     private readonly RemoteServer _server;
     public event OnClientConnected OnClientConnected;
     
-    public Room(Client client, RemoteServer server, int maxPlayers)
+    public Room(Client client, RemoteServer server, int maxPlayers, string password)
     {
         _server = server;
         
         CreateRoomId();
         
         SetMaxPlayers(maxPlayers);
+
+        SetPassword(password);
         
         CurrentPlayers = new List<Client>();
         
@@ -202,6 +204,22 @@ public class Room
     {
         Host = client;
         UpdateClients(client);
+    }
+
+    public string GetPassward()
+    {
+        return Password;
+    }
+
+    public bool SetPassword(string newPassword)
+    {
+        if (newPassword.Length is > 4 or < 4)
+        {
+            return false;
+        }
+
+        Password = newPassword;
+        return true;
     }
     
     protected virtual void OnOnClientConnected(Client client)

@@ -427,9 +427,10 @@ public class RemoteServer
     
     public string CreateRoom(Client client, string command)
     {
-        var part = int.Parse(command);
+        var maxplayers = int.Parse(command[..1]);
+        var password = command[1..];
         
-        Room room = new Room(client, this, part);
+        var room = new Room(client, this, maxplayers, password);
         
         //  Logic to parse message to set MaxPlayers.
         
