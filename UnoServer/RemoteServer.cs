@@ -375,6 +375,7 @@ public class RemoteServer
         return "EndGame was entered";
     }
     
+    //  Add Password logic
     public string JoinRoom(Client client, string command)
     {
         //  int cast the command.

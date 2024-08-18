@@ -8,6 +8,7 @@ public class Room
     private int MaxPlayers { get; set; }
     private Client Host { get; set; }
     public List<Client> CurrentPlayers { get; set; }
+    public string Password { get; set; }
     private readonly RemoteServer _server;
     public event OnClientConnected OnClientConnected;
     
