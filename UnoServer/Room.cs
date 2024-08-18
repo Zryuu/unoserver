@@ -24,6 +24,7 @@ public class Room
         Console.WriteLine($"Room{RoomId} created by {client.GetXivName()}");
 
         OnClientConnected += UpdateClients;
+        OnClientConnected += SetHost;
 
     }
     
@@ -176,7 +177,7 @@ public class Room
     }
 
     //  Delegate func. Called anytime a player joins or leaves room.
-    private void UpdateClients(Client client)
+    public void UpdateClients(Client client)
     {
         //  Combine playerNames to one string with separator.
         var playerNames = string.Join(";", CurrentPlayers.Select(player => player.GetXivName()));
@@ -199,6 +200,7 @@ public class Room
     public void SetHost(Client client)
     {
         Host = client;
+        UpdateClients(client);
     }
     
     protected virtual void OnOnClientConnected(Client client)

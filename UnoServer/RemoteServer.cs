@@ -17,7 +17,9 @@ internal enum MessageTypeReceive
     JoinRoom,
     LeaveRoom,
     UpdateRoom,
-    RoomSettings
+    RoomSettings,
+    UpdateHost,
+    KickPlayer
 }
 
 //  CommandBytes sent to Server
@@ -32,6 +34,8 @@ public enum MessageTypeSend
     LeaveRoom,
     UpdateRoom,
     RoomSettings,
+    UpdateHost,
+    KickPlayer,
     Error = 99
 }
 
@@ -104,11 +108,13 @@ public class RemoteServer
             while ((bytesRead = _stream.Read(buffer, 0, buffer.Length)) != 0)
             {
                 data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                Console.WriteLine($"Received: {data} from {_clients[tcpClient].GetXivName()}");
-                _lastActiveTime[_clients[tcpClient]] = DateTime.Now;
-                string commandResponse = ExecuteCommand(data, tcpClient);
-                SendMessageToClient(_stream,commandResponse);
-            
+                if (_clients.ContainsKey(tcpClient))
+                {
+                    Console.WriteLine($"Received: {data} from {_clients[tcpClient].GetXivName()}");
+                    _lastActiveTime[_clients[tcpClient]] = DateTime.Now;
+                    string commandResponse = ExecuteCommand(data, tcpClient);
+                    SendMessageToClient(_stream,commandResponse);
+                }
             }
         }
         else
@@ -146,7 +152,7 @@ public class RemoteServer
                 Console.WriteLine($"removing inactive client with ID: {_clients[client.GetClient()].GetXivName()}");
                 Logout(client.GetClient(), ResponseType(MessageTypeSend.Logout, 
                     $"Disconnecting from server due to inactivity."));
-                RemoveClient(client.GetClient());
+                RemoveClientTcp(client.GetClient());
             }
         }
     }
@@ -174,7 +180,7 @@ public class RemoteServer
     }
 
     //  Checks if client is in clients, removes client if true
-    public void RemoveClient(TcpClient client)
+    public void RemoveClientTcp(TcpClient client)
     {
         var clientFound = false;
         foreach (var c in _clients.Where(c => c.Key == client))
@@ -289,6 +295,12 @@ public class RemoteServer
             //  LeaveRoom = 10
             case MessageTypeReceive.RoomSettings:
                 return RoomSettings(_clients[client], commandArgument);
+            //  UpdateHost = 11
+            case MessageTypeReceive.UpdateHost:
+                return UpdateHost(_clients[client], commandArgument);
+            //  KickPlayer = 12
+            case MessageTypeReceive.KickPlayer:
+               return KickPlayer(_clients[client], commandArgument);
             default:
                 Console.WriteLine($"Unknown command. commandByte: {commandByte}. commandArgument: {commandArgument}");
                 return ResponseType(MessageTypeSend.Error,
@@ -490,10 +502,71 @@ public class RemoteServer
         //return ResponseType(MessageTypeSend.RoomSettings,);
         return "yes";
     }
+
+    public string UpdateHost(Client client, string command)
+    {
+        if (client.GetCurrentRoom() == null)
+        {
+            return ResponseType(MessageTypeSend.Error, $"Can't update host (Not currently in a room).");
+        }
+
+        var room = client.GetCurrentRoom();
+
+        if (room!.GetHost() != client)
+        {
+            return ResponseType(MessageTypeSend.Error, $"Can't update host (Not current host of room {client.GetCurrentRoom()!.GetRoomId()}).");
+        }
+
+        if (room!.GetHost().GetXivName() == command)
+        {
+            return ResponseType(MessageTypeSend.Error, $"Can't update host (Selected player is already host).");
+        }
+
+        var players = room.GetClientsInRoom();
+
+        foreach (var player in players)
+        {
+            if (player.GetXivName() != command) continue;
+            
+            room.SetHost(player);
+            room.UpdateClients(player);
+            return ResponseType(MessageTypeSend.UpdateHost, $"Successfully updated Host");
+        }
+
+        return ResponseType(MessageTypeSend.Error, $"Couldn't find {command} in room {room.GetRoomId()}");
+    }
+    
+    public string KickPlayer(Client client, string command)
+    {
+        var part = command;
+        if (client.GetCurrentRoom() == null)
+        {
+            Console.WriteLine($"{client.GetXivName()} isn't in a room.");
+            return ResponseType(MessageTypeSend.Error, "Unable to Kick Player (Not Currently in a room).");
+        }
+        
+        var room = GetRoomFromId((int)client.GetRoomId()!);
+
+        if (client.GetXivName() != room!.GetHost().GetXivName())
+        {
+            Console.WriteLine($"{client.GetXivName()} isn't host of room {room.GetRoomId()}.");
+            return ResponseType(MessageTypeSend.Error, "Unable to Kick Player (Not host of room).");
+        }
+        
+        foreach (var player in room!.CurrentPlayers)
+        {
+            if (player.GetXivName() != part) continue;
+            
+            SendMessageToClient(player.GetClient().GetStream(), ResponseType(MessageTypeSend.LeaveRoom, $"{room.GetRoomId()}"));
+            return ResponseType(MessageTypeSend.KickPlayer, $"Successfully kicked {player.GetXivName()}");
+        }
+
+        return ResponseType(MessageTypeSend.Error, $"Unable to Kick player: {part}, Player not found in room.");
+    }
     
     public string RemoveClient(Client client)
     {
-        RemoveClient(client.GetClient());
+        RemoveClientTcp(client.GetClient());
         Console.WriteLine($"Removed: {client.GetClient()} from client list. Client Disconnected...");
 
         return ResponseType(MessageTypeSend.Logout, $"Goodbye {client.GetXivName()}...");
