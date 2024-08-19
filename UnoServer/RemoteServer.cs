@@ -379,16 +379,18 @@ public class RemoteServer
     public string JoinRoom(Client client, string command)
     {
         //  int cast the command.
-        var part = int.Parse(command);
+        var parts = command.Split(";");
+        var givenId = int.Parse(parts[0]);
+        var givenPassword = parts[1];
         
         //  Get client's current room ID. If no room, returns null.
-        var id = client.GetRoomId();
+        var oldRoomId = client.GetRoomId();
         
         //  If Client's RoomID is null
-        if (id != null)
+        if (oldRoomId != null)
         {
             //  Client's OldRoom.
-            var oldRoom = GetRoomFromId((int)id);
+            var oldRoom = GetRoomFromId((int)oldRoomId);
 
             //  Leave Room server side
             oldRoom!.RemoveClientFromRoom(client);
@@ -396,56 +398,56 @@ public class RemoteServer
             //  Leave Room client side
             client.SetCurrentRoom(null);
             SendMessageToClient(client.GetClient().GetStream()
-                ,ResponseType(MessageTypeSend.JoinRoom, $"{id}"));
+                ,ResponseType(MessageTypeSend.JoinRoom, $"{oldRoomId}"));
         }
         
         //  Checks if given Room exists in Rooms.
-        if (GetRoomFromId(part) == null)
+        if (GetRoomFromId(givenId) == null)
         {
-            return ResponseType(MessageTypeSend.Error, $"Room: {part}. Doesn't exist...");
+            return ResponseType(MessageTypeSend.Error, $"Room: {givenId}. Doesn't exist...");
         }
         
-        //  Add's client to room server side.
-        Console.WriteLine($"{client.GetXivName()} joined room: {part}");
-        client.SetRoomId(part);
-
-        //  Add thing to make check if Client was added to Room.
-
         //  Client's new room.
-        var newRoom = GetRoomFromId(part);
+        var newRoom = GetRoomFromId(givenId);
 
+        if (givenPassword == newRoom!.Password)
+        {
+            //  Adds client to room server side.
+            Console.WriteLine($"{client.GetXivName()} joined room: {givenId}");
+            client.SetRoomId(givenId);
+        }
+        else
+        {
+            return ResponseType(MessageTypeSend.Error, $"Incorrect password. Please try again.");
+        }
+        
+        //  Add thing to make check if Client was added to Room.
+        
         if (!newRoom!.CheckPlayerPresent(client))
         {
-            newRoom.AddClientToRoom(client, part);
+            newRoom.AddClientToRoom(client, givenId);
         }
         
-        var playerNames = string.Join(";", newRoom.CurrentPlayers.Select(player => player.GetXivName()));
-        
         //  Tells client it joined room.
-        return ResponseType(MessageTypeSend.JoinRoom, $"{part}");
+        return ResponseType(MessageTypeSend.JoinRoom, $"{givenId}");
     }
     
     public string CreateRoom(Client client, string command)
     {
-        var maxplayers = int.Parse(command[..1]);
+        var maxPlayers = int.Parse(command[..1]);
         var password = command[1..];
         
-        var room = new Room(client, this, maxplayers, password);
+        var room = new Room(client, this, maxPlayers, password);
         
         //  Logic to parse message to set MaxPlayers.
         
         AddRoomToRooms(room);
         
         //  Rewrite this to be an if statement. If Room.AddClientToRoom returns true, SetCurrentRoom is run.
-        if (room.AddClientToRoom(client, room.GetRoomId()) < 1)
-        {
-            Console.WriteLine("Didnt add client to room.");
-        }
-        else
-        {
-            Console.WriteLine($"{client.GetXivName()} joined Room{room.GetRoomId()}.");
-        }
-        
+        Console.WriteLine(room.AddClientToRoom(client, room.GetRoomId()) < 1
+            ? "Didnt add client to room."
+            : $"{client.GetXivName()} joined Room{room.GetRoomId()}.");
+
         room.SetHost(client);
         return ResponseType(MessageTypeSend.JoinRoom, $"{room.GetRoomId()};{room.GetHost().GetXivName()}");
     }
@@ -540,7 +542,6 @@ public class RemoteServer
     
     public string KickPlayer(Client client, string command)
     {
-        var part = command;
         if (client.GetCurrentRoom() == null)
         {
             Console.WriteLine($"{client.GetXivName()} isn't in a room.");
@@ -557,13 +558,13 @@ public class RemoteServer
         
         foreach (var player in room!.CurrentPlayers)
         {
-            if (player.GetXivName() != part) continue;
+            if (player.GetXivName() != command) continue;
             
             SendMessageToClient(player.GetClient().GetStream(), ResponseType(MessageTypeSend.LeaveRoom, $"{room.GetRoomId()}"));
             return ResponseType(MessageTypeSend.KickPlayer, $"Successfully kicked {player.GetXivName()}");
         }
 
-        return ResponseType(MessageTypeSend.Error, $"Unable to Kick player: {part}, Player not found in room.");
+        return ResponseType(MessageTypeSend.Error, $"Unable to Kick player: {command}, Player not found in room.");
     }
     
     public string RemoveClient(Client client)
@@ -574,7 +575,7 @@ public class RemoteServer
         return ResponseType(MessageTypeSend.Logout, $"Goodbye {client.GetXivName()}...");
     }
     
-    public string ResponseType(MessageTypeSend r, string message)
+    public static string ResponseType(MessageTypeSend r, string message)
     {
         var response = $"{(int)r:D2}" + message;
         return response;
