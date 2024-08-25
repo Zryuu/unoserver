@@ -580,7 +580,7 @@ public class RemoteServer
     
     public static string ResponseType(MessageTypeSend r, string message)
     {
-        var response = $"{(int)r:D2}" + message + "\n";
+        var response = $"{(int)r:D2}" + message + ".";
         return response;
     }
     
