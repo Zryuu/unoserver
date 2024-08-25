@@ -26,7 +26,7 @@ public class Room
         
         Console.WriteLine($"Room{RoomId} created by {client.GetXivName()}");
 
-        OnClientConnected += UpdateClients;
+        //OnClientConnected += UpdateClients;
         OnClientConnected += SetHost;
 
     }
@@ -191,8 +191,8 @@ public class Room
         //  Sends the message to all players in room.
         foreach (var player in CurrentPlayers)
         {
-            //_server.SendMessageToClient(player.GetClient().GetStream(),
-              //  _server.UpdateCurrentPlayersInRoom(client, command));
+            _server.SendMessageToClient(player.GetClient().GetStream(),
+                _server.UpdateCurrentPlayersInRoom(client, command));
         }
     }
     
