@@ -449,6 +449,7 @@ public class RemoteServer
             : $"{client.GetXivName()} joined Room{room.GetRoomId()}.");
 
         room.SetHost(client);
+        Console.WriteLine($"{MessageTypeSend.JoinRoom} {room.GetRoomId()};{room.GetHost().GetXivName()}");
         return ResponseType(MessageTypeSend.JoinRoom, $"{room.GetRoomId()};{room.GetHost().GetXivName()}");
     }
     
