@@ -26,8 +26,7 @@ public class Room
         
         Console.WriteLine($"Room{RoomId} created by {client.GetXivName()}");
 
-        //OnClientConnected += UpdateClients;
-        OnClientConnected += SetHost;
+        OnClientConnected += UpdateClients;
 
     }
     

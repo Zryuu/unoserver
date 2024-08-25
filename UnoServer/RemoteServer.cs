@@ -251,6 +251,8 @@ public class RemoteServer
             Console.WriteLine("Invalid command format.");
             return "Invalid command format.";
         }
+
+        var commands = message.Split(".");
         
         var commandByte = int.Parse(message.Substring(0, 2));
         var commandArgument = message[2..];
