@@ -208,6 +208,7 @@ public class RemoteServer
         }
         
         var commandResponseBytes = Encoding.ASCII.GetBytes(message);
+        Console.WriteLine($"Sending: {message}");
         stream.Write(commandResponseBytes, 0, commandResponseBytes.Length);
     }
     
@@ -449,7 +450,6 @@ public class RemoteServer
             : $"{client.GetXivName()} joined Room{room.GetRoomId()}.");
 
         room.SetHost(client);
-        Console.WriteLine($"{MessageTypeSend.JoinRoom} {room.GetRoomId()};{room.GetHost().GetXivName()}");
         return ResponseType(MessageTypeSend.JoinRoom, $"{room.GetRoomId()};{room.GetHost().GetXivName()}");
     }
     
