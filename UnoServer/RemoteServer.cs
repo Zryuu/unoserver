@@ -130,14 +130,14 @@ public class RemoteServer
     {
         while (_isRunning)
         {
-            if (_clients.Count < 1)
-            {
-                continue;
-            }
-            
             //  Sleep for 5mins.
             Thread.Sleep(AfkTimer * 1000);
             var now = DateTime.Now;
+            
+            if (_clients.Count < 1)
+            {
+                return;
+            }
             
             foreach (var client in _lastActiveTime)
             {
@@ -186,7 +186,7 @@ public class RemoteServer
         foreach (var c in _clients.Where(c => c.Key == client))
         {
             clientFound = true;
-            Logout(c.Key, "Disconnected from Server...");
+            c.Key.Close();
             _clients.Remove(c.Key);
         }
         
