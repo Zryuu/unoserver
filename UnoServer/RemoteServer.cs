@@ -119,7 +119,7 @@ public class RemoteServer
         }
         else
         {
-            Console.WriteLine("Invalid login attempt. Closing connection.");
+            Console.WriteLine($"Invalid login attempt. Closing connection. Message: {data}");
             tcpClient.Close();
         }
         
