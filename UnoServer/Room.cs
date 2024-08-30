@@ -11,6 +11,8 @@ public class Room
     public string Password { get; set; }
     private readonly RemoteServer _server;
     public event OnClientConnected OnClientConnected;
+
+    public GameState Game = new GameState();
     
     public Room(Client client, RemoteServer server, int maxPlayers, string password)
     {
@@ -191,7 +193,7 @@ public class Room
         foreach (var player in CurrentPlayers)
         {
             _server.SendMessageToClient(player.GetClient().GetStream(),
-                _server.UpdateCurrentPlayersInRoom(client, command));
+                _server.UpdateCurrentPlayersInRoom(player, command));
         }
     }
     

@@ -18,8 +18,9 @@ internal enum MessageTypeReceive
     LeaveRoom,
     UpdateRoom,
     RoomSettings,
+    GameSettings,
     UpdateHost,
-    KickPlayer
+    KickPlayer,
 }
 
 //  CommandBytes sent to Server
@@ -34,6 +35,7 @@ public enum MessageTypeSend
     LeaveRoom,
     UpdateRoom,
     RoomSettings,
+    GameSettings,
     UpdateHost,
     KickPlayer,
     Error = 99
@@ -295,15 +297,19 @@ public class RemoteServer
             //  LeaveRoom = 09
             case MessageTypeReceive.UpdateRoom:
                 return UpdateCurrentPlayersInRoom(_clients[client], commandArgument);
-            //  LeaveRoom = 10
+            //  RoomSettings = 10
             case MessageTypeReceive.RoomSettings:
                 return RoomSettings(_clients[client], commandArgument);
-            //  UpdateHost = 11
+            //  GameSettings = 11
+            case MessageTypeReceive.GameSettings:
+                return GameSettings(_clients[client], commandArgument);
+            //  UpdateHost = 12
             case MessageTypeReceive.UpdateHost:
                 return UpdateHost(_clients[client], commandArgument);
-            //  KickPlayer = 12
+            //  KickPlayer = 13
             case MessageTypeReceive.KickPlayer:
                return KickPlayer(_clients[client], commandArgument);
+            
             default:
                 Console.WriteLine($"Unknown command. commandByte: {commandByte}. commandArgument: {commandArgument}");
                 return ResponseType(MessageTypeSend.Error,
@@ -503,11 +509,62 @@ public class RemoteServer
 
     public string RoomSettings(Client client, string command)
     {
-       // var
 
-
-        //return ResponseType(MessageTypeSend.RoomSettings,);
         return "yes";
+    }
+
+    public string GameSettings(Client client, string command)
+    {
+        var parts = command.Split(";");
+        var host = parts[0];
+        var startingHand = int.Parse(parts[1]);
+        var zero = bool.Parse(parts[2]);
+        var action = bool.Parse(parts[3]);
+        var special = bool.Parse(parts[4]);
+        var wild = bool.Parse(parts[5]);
+        
+        //  Checks if client who sent the command is in a room.
+        if (client.GetCurrentRoom() == null)
+        {
+            Console.WriteLine("Client isn't in room.");
+            return ResponseType(MessageTypeSend.Error, $"Not Current in a Room");
+        }
+
+        //  Creates a local var of the room.
+        var currentRoom = GetRoomFromId((int)client.GetRoomId()!);
+
+        //  Checks if the Room is null.
+        if (currentRoom == null)
+        {
+            Console.WriteLine("Room is null...weird.");
+            return ResponseType(MessageTypeSend.Error, $"Room wasn't found.");
+        }
+
+        //  Checks if client who sent command is room's host.
+        if (currentRoom!.GetHost().GetXivName() != host)
+        {
+            Console.WriteLine("Client wasn't Host");
+            return ResponseType(MessageTypeSend.Error, $"Attempted to change game settings while not being room host.");
+        }
+
+        //  Checks if Room's Game is active.
+        if (currentRoom.Game.Active)
+        {
+            Console.WriteLine("Game is currently active");
+            return ResponseType(MessageTypeSend.Error, $"Attempted to change game settings while not being room host.");
+        }
+
+        currentRoom.Game.SetSettings(startingHand, zero, special, action, wild);
+
+        var newSettings = currentRoom.Game.UnoSettings;
+
+        foreach (var player in currentRoom.CurrentPlayers)
+        {
+            SendMessageToClient(player.GetClient().GetStream(), ResponseType(MessageTypeSend.GameSettings, 
+                $"{newSettings.StartingHand};{newSettings.IncludeZero};{newSettings.IncludeActionCards};{newSettings.IncludeSpecialCards};{newSettings.IncludeWildCards}"));
+        }
+        
+        return ResponseType(MessageTypeSend.GameSettings, $"Game Settings updated.");
     }
 
     public string UpdateHost(Client client, string command)
