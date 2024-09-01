@@ -89,42 +89,61 @@ public class RemoteServer
     private void HandleClient(object obj)
     {
         TcpClient tcpClient = (TcpClient)obj;
-        _stream = tcpClient.GetStream();
-        var buffer = new byte[1024];
-        int bytesRead;
 
-        bytesRead = _stream.Read(buffer, 0, buffer.Length);
-        var data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-        Console.WriteLine($"Received: {data} for login attempt");
-
-        //  Adds client to Server
-        var response = ExecuteCommand(data, tcpClient);
-        SendMessageToClient(_stream, response);
-
-        if (response.StartsWith("01"))
+        try
         {
-            Client client = _clients[tcpClient];
-            client.SetLastActive(DateTime.Now);
-            Console.WriteLine($"Client connected with ID: {_clients[tcpClient].GetXivName()}");
-            
-            while ((bytesRead = _stream.Read(buffer, 0, buffer.Length)) != 0)
+            using var _stream = tcpClient.GetStream();
+            var buffer = new byte[1024];
+            int bytesRead;
+
+            bytesRead = _stream.Read(buffer, 0, buffer.Length);
+            var data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            Console.WriteLine($"Received: {data} for login attempt");
+
+            //  Adds client to Server
+            var response = ExecuteCommand(data, tcpClient);
+            SendMessageToClient(_stream, response);
+
+            if (response.StartsWith("01"))
             {
-                data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-                if (_clients.ContainsKey(tcpClient))
+                Client client = _clients[tcpClient];
+                client.SetLastActive(DateTime.Now);
+                Console.WriteLine($"Client connected with ID: {_clients[tcpClient].GetXivName()}");
+            
+                while ((bytesRead = _stream.Read(buffer, 0, buffer.Length)) != 0)
                 {
-                    Console.WriteLine($"Received: {data} from {_clients[tcpClient].GetXivName()}");
-                    _lastActiveTime[_clients[tcpClient]] = DateTime.Now;
-                    string commandResponse = ExecuteCommand(data, tcpClient);
-                    SendMessageToClient(_stream,commandResponse);
+                    data = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+                    if (_clients.ContainsKey(tcpClient))
+                    {
+                        Console.WriteLine($"Received: {data} from {_clients[tcpClient].GetXivName()}");
+                        _lastActiveTime[_clients[tcpClient]] = DateTime.Now;
+                        string commandResponse = ExecuteCommand(data, tcpClient);
+                        SendMessageToClient(_stream,commandResponse);
+                    }
                 }
             }
+            else
+            {
+                Console.WriteLine($"Invalid login attempt. Closing connection. Message: {data}");
+                tcpClient.Close();
+            }
         }
-        else
+        catch (IOException ex) when (ex.InnerException is SocketException se && se.SocketErrorCode == SocketError.ConnectionReset)
         {
-            Console.WriteLine($"Invalid login attempt. Closing connection. Message: {data}");
+            
+            Console.WriteLine("Connection reset by peer. The client may have crashed.");
+        }
+        catch (Exception ex)
+        {
+            
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
+        finally
+        {
             tcpClient.Close();
         }
         
+       
     }
 
     //  Checks if any client in clients hasn't sent a ping in > 5mins. If so, removes them from server.
