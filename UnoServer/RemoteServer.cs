@@ -21,6 +21,7 @@ internal enum MessageTypeReceive
     GameSettings,
     UpdateHost,
     KickPlayer,
+    Turn
 }
 
 //  CommandBytes sent to Server
@@ -38,6 +39,7 @@ public enum MessageTypeSend
     GameSettings,
     UpdateHost,
     KickPlayer,
+    Turn,
     Error = 99
 }
 
@@ -51,7 +53,7 @@ public class RemoteServer
     private Dictionary<TcpClient, Client> _clients = new Dictionary<TcpClient, Client>();
     private Dictionary<Client, DateTime> _lastActiveTime = new Dictionary<Client, DateTime>();
     private Dictionary<int, Room> _rooms = new Dictionary<int, Room>();
-    public List<Client> InactiveClients = new List<Client>();
+    public List<Client> InactiveClients;
 
     private NetworkStream _stream;
 
@@ -190,7 +192,7 @@ public class RemoteServer
         return _clients;
     }
     
-    //  Get's Client from clients with TCPClient ref.
+    //  Gets Client from clients with TCPClient ref.
     public Client? GetClient(TcpClient client)
     {
         if (_clients.TryGetValue(client, out var value)) return value;
@@ -273,67 +275,75 @@ public class RemoteServer
             return "Invalid command format.";
         }
 
-        var commands = message.Split(".");
-        
-        var commandByte = int.Parse(message.Substring(0, 2));
-        var commandArgument = message[2..];
-        
-        if (!_clients.ContainsKey(client) && commandByte != 1)
+        var commands = message.Split("\n");
+
+        foreach (var command in commands)
         {
-            Console.WriteLine("Attempted to run command without being a valid Client...");
-            return ResponseType(MessageTypeSend.Error, 
-                "Attempted to run command without being a valid Client...");
-        }
-        
-        var route = (MessageTypeReceive)(commandByte);
-        
-        switch (route)
-        {
-            //  Ping = 01
-            case MessageTypeReceive.Ping:
-                return Ping(_clients[client], commandArgument);
-            //  Login = 02,
-            case MessageTypeReceive.Login:
-                return Login(client, commandArgument);
-            //  Logout = 03,
-            case MessageTypeReceive.Logout:
-                return Logout(client, commandArgument);
-            //  StartGame = 04,
-            case MessageTypeReceive.StartGame:
-                return StartGame(client, commandArgument);
-            //  EndGame = 05,
-            case MessageTypeReceive.EndGame:
-                return EndGame(client, commandArgument);
-            //  CreateRoom = 06,
-            case MessageTypeReceive.CreateRoom:
-                return CreateRoom(_clients[client], commandArgument);
-            //  JoinRoom = 07,
-            case MessageTypeReceive.JoinRoom:
-                return JoinRoom(_clients[client], commandArgument);
-            //  LeaveRoom = 08
-            case MessageTypeReceive.LeaveRoom:
-                return LeaveRoom(_clients[client], commandArgument);
-            //  LeaveRoom = 09
-            case MessageTypeReceive.UpdateRoom:
-                return UpdateCurrentPlayersInRoom(_clients[client], commandArgument);
-            //  RoomSettings = 10
-            case MessageTypeReceive.RoomSettings:
-                return RoomSettings(_clients[client], commandArgument);
-            //  GameSettings = 11
-            case MessageTypeReceive.GameSettings:
-                return GameSettings(_clients[client], commandArgument);
-            //  UpdateHost = 12
-            case MessageTypeReceive.UpdateHost:
-                return UpdateHost(_clients[client], commandArgument);
-            //  KickPlayer = 13
-            case MessageTypeReceive.KickPlayer:
-               return KickPlayer(_clients[client], commandArgument);
+            var commandByte = int.Parse(command.Substring(0, 2));
+            var commandArgument = command[2..];
             
-            default:
-                Console.WriteLine($"Unknown command. commandByte: {commandByte}. commandArgument: {commandArgument}");
-                return ResponseType(MessageTypeSend.Error,
-                    $"Unknown command. commandByte: {commandByte}. commandArgument: {commandArgument}");
+            if (!_clients.ContainsKey(client) && commandByte != 1)
+            {
+                Console.WriteLine("Attempted to run command without being a valid Client...");
+                return ResponseType(MessageTypeSend.Error, 
+                    "Attempted to run command without being a valid Client...");
+            }
+            
+            var route = (MessageTypeReceive)(commandByte);
+            
+            switch (route)
+            {
+                //  Ping = 01
+                case MessageTypeReceive.Ping:
+                    return Ping(_clients[client], commandArgument);
+                //  Login = 02,
+                case MessageTypeReceive.Login:
+                    return Login(client, commandArgument);
+                //  Logout = 03,
+                case MessageTypeReceive.Logout:
+                    return Logout(client, commandArgument);
+                //  StartGame = 04,
+                case MessageTypeReceive.StartGame:
+                    return StartGame(_clients[client], commandArgument);
+                //  EndGame = 05,
+                case MessageTypeReceive.EndGame:
+                    return ForceEndGame(_clients[client], commandArgument);
+                //  CreateRoom = 06,
+                case MessageTypeReceive.CreateRoom:
+                    return CreateRoom(_clients[client], commandArgument);
+                //  JoinRoom = 07,
+                case MessageTypeReceive.JoinRoom:
+                    return JoinRoom(_clients[client], commandArgument);
+                //  LeaveRoom = 08
+                case MessageTypeReceive.LeaveRoom:
+                    return LeaveRoom(_clients[client], commandArgument);
+                //  LeaveRoom = 09
+                case MessageTypeReceive.UpdateRoom:
+                    return UpdateCurrentPlayersInRoom(_clients[client], commandArgument);
+                //  RoomSettings = 10
+                case MessageTypeReceive.RoomSettings:
+                    return RoomSettings(_clients[client], commandArgument);
+                //  GameSettings = 11
+                case MessageTypeReceive.GameSettings:
+                    return GameSettings(_clients[client], commandArgument);
+                //  UpdateHost = 12
+                case MessageTypeReceive.UpdateHost:
+                    return UpdateHost(_clients[client], commandArgument);
+                //  KickPlayer = 13
+                case MessageTypeReceive.KickPlayer:
+                   return KickPlayer(_clients[client], commandArgument);
+                //  Turn = 14
+                case MessageTypeReceive.Turn:
+                    return HandleTurn(_clients[client], commandArgument);
+                default:
+                    Console.WriteLine($"Unknown command. commandByte: {commandByte}. commandArgument: {commandArgument}");
+                    return ResponseType(MessageTypeSend.Error,
+                        $"Unknown command. commandByte: {commandByte}. commandArgument: {commandArgument}");
+            }
         }
+        Console.WriteLine($"Issue executing command, message: {message}");
+        return ResponseType(MessageTypeSend.Error,
+            $"Issue executing command, Error: Command failed to execute correctly.");
     }
     
 
@@ -352,7 +362,7 @@ public class RemoteServer
         if (command != client.GetXivName())
         {
             Console.WriteLine($"Ping received from {client.GetXivName()} but name sent was {command}...Removing");
-            RemoveClient(client);
+            return RemoveClient(client);
         }
         
         Console.WriteLine($"Ping received from {client.GetXivName()}");
@@ -390,17 +400,111 @@ public class RemoteServer
         }
         
         InactiveClients.Add(GetClient(client)!);
+
+        if (GetClient(client)!.GetCurrentRoom() == null)
+        {
+            return ResponseType(MessageTypeSend.Logout, $"Disconnected from Server...Goodbye...");
+        }
+
+        if (GetClient(client)!.GetCurrentRoom()!.GetHost() != GetClient(client))
+        {
+            GetClient(client)!.GetCurrentRoom()!.RemoveClientFromRoom(GetClient(client)!);
+            return ResponseType(MessageTypeSend.Logout, $"Disconnected from Server...Goodbye...");
+        }
+            
+        GetClient(client)!.GetCurrentRoom()!.RemoveHost();
+
         return ResponseType(MessageTypeSend.Logout, $"Disconnected from Server...Goodbye...");
     }
 
-    public string StartGame(TcpClient client, string command)
+    //  Starts game for all clients.
+    public string StartGame(Client client, string command)
     {
-        return "StartGame was entered";
+        //  Gets ref to room.
+        var room = client.GetCurrentRoom();
+
+        //  Checks if room ref is null
+        if (room == null)
+        {
+            Console.WriteLine("Failed to start a game, Client currently not in a room...");
+            return ResponseType(MessageTypeSend.Error, 
+                "Failed to start a game, Client currently not in a room.");
+        }
+
+        //  Checks if Client who sent the command is actually Host.
+        if (room.GetHost().GetXivName() != client.GetXivName())
+        {
+            Console.WriteLine("Star game called by non-host client");
+            return ResponseType(MessageTypeSend.Error, 
+                "Failed to start a game, Star game called by non-host client.");
+        }
+        
+        //  Gets Ref to clients.
+        var players = room.GetClientsInRoom();
+        
+        //  Sets GameState
+        room.Game.StartGame(players);
+        
+        //  Sends start game to all clients.
+        foreach (var player in players)
+        {
+            if (player == client)
+            {
+                continue;
+            }
+            
+            SendMessageToClient(player.GetClient().GetStream(), 
+                ResponseType(MessageTypeSend.StartGame, $"{room.Game.CurrentTurn!.GetXivName()}"));
+        }
+        
+        return ResponseType(MessageTypeSend.StartGame, $"{room.Game.CurrentTurn!.GetXivName()}");
+    }
+
+    //  Game won by a player, Ends game for all clients. (Not called by player)
+    public void EndGame(List<Client> clients, string winner)
+    {
+        
+        var room = clients.First().GetCurrentRoom();
+
+        if (room == null)
+        {
+            Console.WriteLine("Issue with ending game, room is null");
+            return;
+        }
+
+        foreach (var player in clients)
+        {
+            SendMessageToClient(player.GetClient().GetStream(), ResponseType(MessageTypeSend.EndGame, 
+                $"Game Over. Match won by {winner}. Game lasted for {room.Game.Turn} Turns"));
+        }
     }
     
-    public string EndGame(TcpClient client, string command)
+    //  Host canceled game, Ends Game for all clients. (Called by player)
+    public string ForceEndGame(Client client, string command)
     {
-        return "EndGame was entered";
+        
+        var room = client.GetCurrentRoom();
+
+        if (room == null)
+        {
+            Console.WriteLine("EndGame command received from client not in a valid room.");
+            return ResponseType(MessageTypeSend.Error, $"{client.GetXivName()} Isn't in a valid room");
+        }
+        
+        room!.Game.EndGame();
+
+        foreach (var player in room.GetClientsInRoom())
+        {
+            if (player == client)
+            {
+                continue;
+            }
+            
+            SendMessageToClient(player.GetClient().GetStream(), ResponseType(MessageTypeSend.EndGame, 
+                "Game was ended by host."));
+        }
+        
+        return ResponseType(MessageTypeSend.EndGame, "Successfully ended game.");
     }
     
     //  Add Password logic
@@ -644,6 +748,88 @@ public class RemoteServer
         }
 
         return ResponseType(MessageTypeSend.Error, $"Unable to Kick player: {command}, Player not found in room.");
+    }
+
+    public string HandleTurn(Client client, string command)
+    {
+        //  Parse command
+        var parts = command.Split(";");
+        var turnType = parts[0];
+        var type = int.Parse(parts[1]);
+        var color = int.Parse(parts[2]);
+        var number = int.Parse(parts[3]);
+        
+        var room = client.GetCurrentRoom();
+
+        //  If client isn't in a room
+        if (room == null)
+        {
+            Console.WriteLine($"{client.GetXivName()} sent a Turn command but isn't in a room.");
+            return ResponseType(MessageTypeSend.Error, $"Can't handle Turn (Not currently in a room).");
+        }
+
+        //  If Room's game isn't active
+        if (!room.Game.Active)
+        {
+            Console.WriteLine($"{client.GetXivName()} sent a Turn command but game isn't currently active.");
+            return ResponseType(MessageTypeSend.Error, $"Can't handle Turn (Not currently in a live game).");
+        }
+        
+        //  If It's not Client's turn (Should never be called....but just in case.)
+        if (client != room.Game.CurrentTurn)
+        {
+            return ResponseType(MessageTypeSend.Error, $"Can't handle Turn (Not currently your turn).");
+        }
+        
+        switch (turnType)
+        {
+            case "Draw":
+                room.Game.HandleTurn((TurnType)0);
+
+                foreach (var player in room.GetClientsInRoom())
+                {
+                    if (player == client)
+                    {
+                        continue;
+                    }
+                    
+                    SendMessageToClient(player.GetClient().GetStream(), 
+                        ResponseType(MessageTypeSend.Turn, 
+                            $"Draw;{type};{color};{number};{room.Game.CurrentTurn.GetXivName()}"));
+                }
+                
+                return ResponseType(MessageTypeSend.Turn, 
+                    $"Draw;{type};{color};{number};{room.Game.CurrentTurn.GetXivName()}");
+            
+            case "Play":
+                room.Game.HandleTurn((TurnType)1);
+                
+                foreach (var player in room.GetClientsInRoom())
+                {
+                    if (player == client)
+                    {
+                        continue;
+                    }
+
+                    SendMessageToClient(player.GetClient().GetStream(),
+                        ResponseType(MessageTypeSend.Turn,
+                            $"Play;{type};{color};{number};{room.Game.CurrentTurn.GetXivName()}"));
+                }
+
+                //  This will prob cause problems.....we'll see
+                if (room.Game.CheckIfGameOver())
+                {
+                    EndGame(room.GetClientsInRoom(), client.GetXivName());
+                }
+                
+                return ResponseType(MessageTypeSend.Turn, 
+                    $"Play;{type};{color};{number};{room.Game.CurrentTurn.GetXivName()}");
+            
+            default:
+                Console.WriteLine($"Invalid Turn Command: {command} sent by {client.GetXivName()}");
+                return ResponseType(MessageTypeSend.Error, 
+                    $"Invalid Turn Command");
+        }
     }
     
     public string RemoveClient(Client client)

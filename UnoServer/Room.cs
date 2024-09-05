@@ -12,7 +12,7 @@ public class Room
     private readonly RemoteServer _server;
     public event OnClientConnected OnClientConnected;
 
-    public GameState Game = new GameState();
+    public GameState Game;
     
     public Room(Client client, RemoteServer server, int maxPlayers, string password)
     {
@@ -25,6 +25,8 @@ public class Room
         SetPassword(password);
         
         CurrentPlayers = new List<Client>();
+
+        Game = new GameState();
         
         Console.WriteLine($"Room{RoomId} created by {client.GetXivName()}");
 
@@ -107,28 +109,6 @@ public class Room
     {
         return CurrentPlayers;
     }
-    
-    public bool RemoveHost()
-    {
-        var hostClient = _server.GetClient(Host.GetClient());
-
-        //  Checks if Host Client's null, return.
-        if (hostClient == null)
-        {
-            return false;
-        }
-
-        //  If Host Client's roomID matches room. Set Host's Room to null.
-        if (hostClient!.GetRoomId() == RoomId)
-        {
-            hostClient.SetCurrentRoom(null!);
-        }
-        
-        RemoveClientFromRoom(hostClient);
-        
-        return true;
-    }
-    
     public int AddClientToRoom(Client client, int givenId)
     {
         //  Checks if the roomID given matches this room instance's ID.
@@ -197,6 +177,32 @@ public class Room
         }
     }
     
+    //  Removes host from room (When Host leaves)
+    public bool RemoveHost()
+    {
+        var hostClient = _server.GetClient(Host.GetClient());
+
+        //  Checks if Host Client's null, return.
+        if (hostClient == null)
+        {
+            return false;
+        }
+
+        //  If Host Client's roomID matches room. Set Host's Room to null.
+        if (hostClient!.GetRoomId() == RoomId)
+        {
+            hostClient.SetCurrentRoom(null!);
+        }
+        
+        //  Remove client from list.
+        RemoveClientFromRoom(hostClient);
+        
+        //  Set new Host
+        SetHost(CurrentPlayers.First());
+        
+        return true;
+    }
+    
     public Client GetHost()
     {
         return Host;
@@ -207,14 +213,14 @@ public class Room
         UpdateClients(client);
     }
 
-    public string GetPassward()
+    public string GetPassword()
     {
         return Password;
     }
 
     public bool SetPassword(string newPassword)
     {
-        if (newPassword.Length is > 4 or < 4)
+        if (newPassword.Length is not 4)
         {
             return false;
         }
