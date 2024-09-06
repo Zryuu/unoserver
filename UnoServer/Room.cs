@@ -121,7 +121,6 @@ public class Room
         //  Checks if Room is full
         if (CurrentPlayers.Count >= MaxPlayers)
         {
-
             for (var i = 0; i < CurrentPlayers.Count; i++)
             {
                 Console.WriteLine($"Player{i}: {CurrentPlayers[i].GetXivName()}");
