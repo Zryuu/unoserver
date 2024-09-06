@@ -4,7 +4,7 @@ public delegate void OnClientConnected(Client client);
 
 public class Room
 {
-    private int RoomId { get; set; }
+    public int RoomId { get; set; }
     private int MaxPlayers { get; set; }
     private Client Host { get; set; }
     public List<Client> CurrentPlayers { get; set; }
@@ -23,8 +23,6 @@ public class Room
         SetMaxPlayers(maxPlayers);
 
         SetPassword(password);
-
-        AddClientToRoom(client, RoomId);
         
         CurrentPlayers = new List<Client>();
 

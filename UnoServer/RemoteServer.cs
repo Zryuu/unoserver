@@ -575,6 +575,8 @@ public class RemoteServer
         
         AddRoomToRooms(room);
         
+        room.AddClientToRoom(client, room.RoomId);
+        
         //  Rewrite this to be an if statement. If Room.AddClientToRoom returns true, SetCurrentRoom is run.
         Console.WriteLine(room.AddClientToRoom(client, room.GetRoomId()) < 1
             ? "Didnt add client to room."
