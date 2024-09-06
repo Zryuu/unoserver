@@ -570,11 +570,6 @@ public class RemoteServer
         var password = command[1..];
         
         var room = new Room(client, this, maxPlayers, password);
-
-        if (room == null)
-        {
-            Console.WriteLine("Failed to create a room, room is null");
-        }
         
         //  Logic to parse message to set MaxPlayers.
         

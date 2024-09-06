@@ -23,6 +23,8 @@ public class Room
         SetMaxPlayers(maxPlayers);
 
         SetPassword(password);
+
+        AddClientToRoom(client, RoomId);
         
         CurrentPlayers = new List<Client>();
 
