@@ -169,10 +169,25 @@ public class RemoteServer
                     InactiveClients.Add(client.Key);
                 }
             }
-
+            
             foreach (var client in InactiveClients)
             {
+                if (_clients[client.GetClient()] == null) continue;
+                
                 Console.WriteLine($"removing inactive client with ID: {_clients[client.GetClient()].GetXivName()}");
+
+                if (client.GetCurrentRoom() != null)
+                {
+                    if (client.GetCurrentRoom()!.GetHost() == client)
+                    {
+                        client.GetCurrentRoom()!.RemoveHost();
+                    }
+                    else
+                    {
+                        client.GetCurrentRoom()!.RemoveClientFromRoom(client);
+                    }
+                }
+                
                 Logout(client.GetClient(), ResponseType(MessageTypeSend.Logout, 
                     $"Disconnecting from server due to inactivity."));
                 RemoveClientTcp(client.GetClient());
