@@ -82,8 +82,6 @@ public class GameState
     //  
     public void EndGame()
     {
-        
-        
         Active = false;
         CurrentTurn = null;
         Clockwise = true;
@@ -100,11 +98,11 @@ public class GameState
         switch (turn)
         {
             case TurnType.Draw:
+                PlayersHeldCards[(int)CurrentTurnIndex!]++;
                 break;
             case TurnType.Play:
 
                 PlayersHeldCards[(int)CurrentTurnIndex!]--;
-
                 
                 if (Clockwise)
                 {
