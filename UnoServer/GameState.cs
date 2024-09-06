@@ -59,6 +59,8 @@ public class GameState
     {
         //  Sets players.
         Players = players;
+
+        Active = true;
         
         //  Reset's Turn counter.
         Turn = 0;

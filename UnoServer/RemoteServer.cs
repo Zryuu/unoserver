@@ -293,46 +293,46 @@ public class RemoteServer
             
             switch (route)
             {
-                //  Ping = 01
+                //  Ping = 00
                 case MessageTypeReceive.Ping:
                     return Ping(_clients[client], commandArgument);
-                //  Login = 02,
+                //  Login = 01,
                 case MessageTypeReceive.Login:
                     return Login(client, commandArgument);
-                //  Logout = 03,
+                //  Logout = 02,
                 case MessageTypeReceive.Logout:
                     return Logout(client, commandArgument);
-                //  StartGame = 04,
+                //  StartGame = 03,
                 case MessageTypeReceive.StartGame:
                     return StartGame(_clients[client], commandArgument);
-                //  EndGame = 05,
+                //  EndGame = 04,
                 case MessageTypeReceive.EndGame:
                     return ForceEndGame(_clients[client], commandArgument);
-                //  CreateRoom = 06,
+                //  CreateRoom = 05,
                 case MessageTypeReceive.CreateRoom:
                     return CreateRoom(_clients[client], commandArgument);
-                //  JoinRoom = 07,
+                //  JoinRoom = 06,
                 case MessageTypeReceive.JoinRoom:
                     return JoinRoom(_clients[client], commandArgument);
-                //  LeaveRoom = 08
+                //  LeaveRoom = 07
                 case MessageTypeReceive.LeaveRoom:
                     return LeaveRoom(_clients[client], commandArgument);
-                //  LeaveRoom = 09
+                //  LeaveRoom = 08
                 case MessageTypeReceive.UpdateRoom:
                     return UpdateCurrentPlayersInRoom(_clients[client], commandArgument);
-                //  RoomSettings = 10
+                //  RoomSettings = 09
                 case MessageTypeReceive.RoomSettings:
                     return RoomSettings(_clients[client], commandArgument);
-                //  GameSettings = 11
+                //  GameSettings = 10
                 case MessageTypeReceive.GameSettings:
                     return GameSettings(_clients[client], commandArgument);
-                //  UpdateHost = 12
+                //  UpdateHost = 11
                 case MessageTypeReceive.UpdateHost:
                     return UpdateHost(_clients[client], commandArgument);
-                //  KickPlayer = 13
+                //  KickPlayer = 12
                 case MessageTypeReceive.KickPlayer:
                    return KickPlayer(_clients[client], commandArgument);
-                //  Turn = 14
+                //  Turn = 13
                 case MessageTypeReceive.Turn:
                     return HandleTurn(_clients[client], commandArgument);
                 default:
