@@ -504,7 +504,7 @@ public class RemoteServer
                 "Game was ended by host."));
         }
         
-        return ResponseType(MessageTypeSend.EndGame, "Successfully ended game.");
+        return ResponseType(MessageTypeSend.EndGame, $"{true};Successfully ended game.");
     }
     
     //  Add Password logic
