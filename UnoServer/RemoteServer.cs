@@ -490,7 +490,7 @@ public class RemoteServer
         foreach (var player in clients)
         {
             SendMessageToClient(player.GetClient().GetStream(), ResponseType(MessageTypeSend.EndGame, 
-                $"Game Over. Match won by {winner}. Game lasted for {room.Game.Turn} Turns"));
+                $"{false};Game Over. Match won by {winner}. Game lasted for {room.Game.Turn} Turns"));
         }
     }
     
